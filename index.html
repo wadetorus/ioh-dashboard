@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOH Command Centre — MrFoxx</title>
+<style>
+:root{--bk:#0A0A0A;--dk:#141414;--dk2:#1C1C1C;--gd:#8B5C2A;--gl:#C4884B;--wh:#FFFFFF;--gr:#888888;--grl:#CCCCCC;--grn:#2ECC71;--gnd:#1A3A22;--bl:#3498DB;--bld:#0A1A3A;--or:#E67E22;--rd:#E74C3C;--rdd:#3A0A0A;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bk);color:var(--wh);font-family:Calibri,'Segoe UI',sans-serif;font-size:14px;min-height:100vh;}
+.header{background:var(--bk);border-bottom:2px solid var(--gd);display:flex;align-items:stretch;position:sticky;top:0;z-index:100;}
+.hlogo{padding:15px 28px;display:flex;align-items:center;gap:14px;border-right:1px solid #222;}
+.lm{font-family:'Arial Black',Arial,sans-serif;font-size:20px;font-weight:900;font-style:italic;color:var(--wh);letter-spacing:1px;}
+.ld{width:2px;height:26px;background:var(--gd);}
+.ls{font-size:10px;color:var(--gd);text-transform:uppercase;letter-spacing:2px;line-height:1.5;}
+.htabs{display:flex;flex:1;}
+.htab{padding:0 22px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.5px;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.htab:hover{color:var(--wh);background:#111;}
+.htab.active{color:var(--gl);border-bottom-color:var(--gd);}
+.htab .cnt{background:#1A1A1A;color:var(--gr);padding:2px 7px;border-radius:10px;font-size:10px;}
+.htab.active .cnt{background:var(--gd);color:var(--wh);}
+.hright{padding:15px 28px;display:flex;flex-direction:column;justify-content:center;text-align:right;}
+.htime{font-family:Arial,sans-serif;font-size:20px;font-weight:700;}
+.hdate{font-size:10px;color:var(--gr);margin-top:2px;}
+.page{display:none;padding:26px 30px;max-width:1480px;}
+.page.active{display:block;}
+/* PIPELINE BANNER */
+.pbanner{display:flex;background:var(--dk);border:1px solid #222;border-left:4px solid var(--gd);border-radius:4px;margin-bottom:26px;overflow:hidden;}
+.pstat{flex:1;padding:16px 20px;text-align:center;border-right:1px solid #1E1E1E;}
+.pstat:last-child{border-right:none;}
+.pstat .num{font-family:'Arial Black',Arial,sans-serif;font-size:30px;font-weight:900;color:var(--gl);line-height:1;}
+.pstat .lbl{font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:1px;margin-top:5px;}
+/* SECTION LABEL */
+.slbl{font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #222;}
+/* AGENT CARDS */
+.agrid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:32px;}
+.acard{background:var(--dk);border:1px solid #222;border-radius:6px;overflow:hidden;transition:border-color .2s;}
+.acard:hover{border-color:var(--gd);}
+.ahead{padding:15px 20px;background:var(--dk2);border-bottom:1px solid #1A1A1A;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.aicon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.aname{font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:var(--wh);}
+.asched{font-size:11px;color:var(--gr);margin-top:3px;}
+.sbadge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;flex-shrink:0;}
+.s-idle{background:#1A1A1A;color:var(--gr);border:1px solid #333;}
+.s-done{background:var(--gnd);color:var(--grn);border:1px solid #2A5A32;}
+.s-run{background:var(--bld);color:#5BC8F5;border:1px solid #1A4A7A;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+.abody{padding:15px 20px;}
+.ameta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.mkey{font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.mval{font-size:12px;color:var(--grl);}
+.mval.gd{color:var(--gl);font-weight:700;}
+.asum{background:#111;border:1px solid #1E1E1E;border-radius:4px;padding:10px 14px;font-size:12px;color:#AAA;font-style:italic;line-height:1.5;margin-bottom:12px;}
+.achips{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{background:#111;border:1px solid #222;border-radius:4px;padding:5px 10px;font-size:11px;color:var(--gr);}
+.chip .cn{color:var(--gl);font-weight:700;font-size:13px;}
+.afoot{padding:10px 20px;background:#0D0D0D;border-top:1px solid #1A1A1A;display:flex;justify-content:space-between;align-items:center;}
+.nrun{font-size:11px;color:var(--gr);}
+.nrun span{color:var(--gl);}
+/* TWO COL */
+.twocol{display:grid;grid-template-columns:1fr 380px;gap:24px;margin-bottom:32px;}
+/* LOG */
+.alog{background:var(--dk);border:1px solid #222;border-radius:6px;overflow:hidden;}
+.loghead{padding:13px 20px;background:var(--dk2);border-bottom:1px solid #1A1A1A;font-family:Arial,sans-serif;font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+.loghead span{font-size:11px;color:var(--gr);font-weight:400;}
+.logempty{padding:36px;text-align:center;color:var(--gr);font-style:italic;font-size:13px;}
+.logentry{padding:11px 20px;border-bottom:1px solid #161616;display:flex;gap:12px;align-items:flex-start;}
+.logentry:last-child{border-bottom:none;}
+.ldot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.ld-done{background:var(--grn);}
+.ld-err{background:var(--rd);}
+.ld-info{background:var(--gl);}
+.lagent{font-size:11px;color:var(--gl);font-weight:700;text-transform:uppercase;}
+.lmsg{font-size:12px;color:#CCC;margin-top:3px;line-height:1.4;}
+.lts{font-size:10px;color:#555;margin-top:3px;}
+/* SIDE CARDS */
+.scard{background:var(--dk);border:1px solid #222;border-radius:6px;overflow:hidden;margin-bottom:18px;}
+.scard:last-child{margin-bottom:0;}
+.schead{padding:13px 18px;background:var(--dk2);border-bottom:1px solid #1A1A1A;font-family:Arial,sans-serif;font-size:13px;font-weight:700;}
+.scbody{padding:16px 18px;}
+.frow{margin-bottom:13px;}
+.frow:last-child{margin-bottom:0;}
+.flrow{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px;}
+.flbl{color:var(--grl);}
+.fnum{color:var(--gl);font-weight:700;}
+.fbg{height:6px;background:#1A1A1A;border-radius:3px;overflow:hidden;}
+.ffill{height:100%;border-radius:3px;}
+.srow{display:flex;align-items:center;gap:12px;margin-bottom:9px;}
+.srow:last-child{margin-bottom:0;}
+.sday{width:50px;font-size:10px;color:var(--gr);font-weight:700;text-transform:uppercase;font-family:Arial,sans-serif;flex-shrink:0;}
+.sday.today{color:var(--gl);}
+.spill{border-radius:3px;padding:5px 12px;font-size:11px;font-weight:700;font-family:Arial,sans-serif;}
+/* BUTTONS */
+.btn{padding:7px 15px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;border:none;transition:all .15s;letter-spacing:.3px;}
+.bg{background:var(--gd);color:var(--wh);}
+.bg:hover{background:var(--gl);}
+.bd{background:#1A1A1A;color:var(--grl);border:1px solid #333;}
+.bd:hover{background:#252525;color:var(--wh);}
+.br{background:var(--rdd);color:#F5A5A0;border:1px solid #5A1A1A;}
+.br:hover{background:#4A0A0A;}
+.sm{padding:4px 10px;font-size:11px;}
+/* TABLES */
+.tbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.sbox{flex:1;min-width:200px;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:8px 12px;color:var(--wh);font-size:13px;outline:none;}
+.sbox:focus{border-color:var(--gd);}
+.sbox::placeholder{color:#555;}
+.fsel{background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:8px 12px;color:var(--grl);font-size:12px;outline:none;cursor:pointer;}
+.fsel:focus{border-color:var(--gd);}
+.twrap{overflow-x:auto;border-radius:5px;border:1px solid #1E1E1E;}
+table{width:100%;border-collapse:collapse;min-width:900px;}
+thead tr{background:var(--gd);}
+thead th{padding:10px 12px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:var(--wh);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;cursor:pointer;user-select:none;}
+thead th:hover{background:var(--gl);}
+tbody tr{border-bottom:1px solid #1A1A1A;transition:background .1s;}
+tbody tr:nth-child(even){background:var(--dk);}
+tbody tr:nth-child(odd){background:var(--bk);}
+tbody tr:hover{background:#1A1208!important;}
+tbody td{padding:9px 12px;font-size:12px;color:var(--grl);vertical-align:middle;}
+.nc{max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:#AAA;}
+.nc:hover{color:var(--wh);}
+.igl{color:var(--gl);text-decoration:none;font-size:11px;}
+.igl:hover{color:var(--wh);}
+.isel{background:#111;border:1px solid #2A2A2A;border-radius:3px;color:var(--wh);font-size:11px;padding:3px 7px;cursor:pointer;outline:none;}
+.tcnt{margin-top:8px;font-size:11px;color:var(--gr);}
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto;}
+.mo.open{display:flex;}
+.md{background:var(--dk2);border:1px solid var(--gd);border-radius:8px;width:700px;max-width:96vw;margin-bottom:40px;}
+.mhead{padding:18px 22px;background:var(--dk);border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center;}
+.mhead h2{font-family:Arial,sans-serif;font-size:15px;font-weight:700;}
+.mclose{background:none;border:none;color:var(--gr);font-size:22px;cursor:pointer;line-height:1;}
+.mclose:hover{color:var(--wh);}
+.mtabs{display:flex;border-bottom:1px solid #222;padding:0 22px;}
+.mtab{padding:10px 16px;font-size:12px;font-weight:700;font-family:Arial,sans-serif;color:var(--gr);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.mtab.active{color:var(--gl);border-bottom-color:var(--gd);}
+.mbody{padding:20px 22px;}
+.mpanel{display:none;}
+.mpanel.active{display:block;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fgf{grid-column:1/-1;}
+.fg label{font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:1px;font-family:Arial,sans-serif;font-weight:700;display:block;margin-bottom:5px;}
+.fg input,.fg select,.fg textarea{background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:8px 11px;color:var(--wh);font-size:13px;font-family:Calibri,sans-serif;outline:none;width:100%;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gd);}
+.fg textarea{resize:vertical;min-height:72px;}
+.fg select option{background:var(--dk2);}
+.hint{font-size:10px;color:var(--gr);font-style:italic;margin-top:4px;}
+.mfoot{padding:14px 22px;border-top:1px solid #1A1A1A;display:flex;justify-content:flex-end;gap:10px;}
+.eprev{background:#0A0A0A;border:1px solid #2A2A2A;border-left:3px solid var(--gd);border-radius:4px;padding:14px 16px;font-size:12px;color:#CCC;line-height:1.7;white-space:pre-wrap;min-height:110px;margin-top:10px;}
+.eprev .es{color:var(--gl);font-weight:700;font-size:13px;display:block;margin-bottom:8px;}
+/* STRATEGY CARDS */
+.strategy-card{background:#111;border:2px solid #2A2A2A;border-radius:5px;padding:12px 14px;cursor:pointer;transition:all .15s;}
+.strategy-card:hover{border-color:var(--gd);background:#141414;}
+.strategy-card.active{border-color:var(--gd);background:#0D1A0D;}
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--gnd);color:var(--grn);padding:11px 18px;border-radius:5px;font-size:13px;font-weight:700;font-family:Arial,sans-serif;border:1px solid #2A5A32;z-index:2000;opacity:0;pointer-events:none;transition:opacity .3s;}
+.toast.show{opacity:1;}
+/* FOOTER */
+.footer{border-top:1px solid #1A1A1A;padding:14px 30px;display:flex;justify-content:space-between;align-items:center;color:var(--gr);font-size:11px;margin-top:20px;}
+.footer .brand{color:var(--gd);font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hlogo">
+    <div class="lm">| MRFOXX |</div>
+    <div class="ld"></div>
+    <div class="ls">IOH<br>PROGRAM</div>
+  </div>
+  <div class="htabs">
+    <div class="htab active" onclick="showPage('overview')">📊 Overview</div>
+    <div class="htab" onclick="showPage('queue')">📤 Outreach Queue <span class="cnt" id="tc-queue">0</span></div>
+    <div class="htab" onclick="showPage('influencers')">👤 Influencers <span class="cnt" id="tc-inf">68</span></div>
+    <div class="htab" onclick="showPage('podcasts')">🎙 Podcasts <span class="cnt" id="tc-pod">22</span></div>
+    <div class="htab" onclick="showPage('agents')">🤖 Agents</div>
+  </div>
+  <div class="hright">
+    <div class="htime" id="clock">--:--</div>
+    <div class="hdate" id="clock-date"></div>
+  </div>
+</div>
+
+<!-- OVERVIEW -->
+<div class="page active" id="page-overview">
+  <div class="pbanner">
+    <div class="pstat"><div class="num" id="ov-t">32</div><div class="lbl">Total Influencers</div></div>
+    <div class="pstat"><div class="num" id="ov-c" style="color:var(--grn)">2</div><div class="lbl">Confirmed</div></div>
+    <div class="pstat"><div class="num" id="ov-p">27</div><div class="lbl">Prospects</div></div>
+    <div class="pstat"><div class="num" id="ov-a" style="color:var(--or)">2</div><div class="lbl">Active Paid</div></div>
+    <div class="pstat"><div class="num" id="ov-o" style="color:var(--bl)">0</div><div class="lbl">Outreached</div></div>
+    <div class="pstat"><div class="num" id="ov-pod">22</div><div class="lbl">Podcasts</div></div>
+  </div>
+
+  <div class="slbl">Active Agents</div>
+  <div class="agrid">
+
+    <div class="acard">
+      <div class="ahead">
+        <div class="aicon" style="background:#1A2A1A;">📤</div>
+        <div style="flex:1"><div class="aname">Outreach Pipeline Agent</div><div class="asched">Runs Tue &amp; Thu — 8:00 AM</div></div>
+        <div class="sbadge s-idle">IDLE</div>
+      </div>
+      <div class="abody">
+        <div class="ameta">
+          <div><div class="mkey">Last Run</div><div class="mval">Never</div></div>
+          <div><div class="mkey">Next Run</div><div class="mval gd">Tue 15 Apr — 8:00 AM</div></div>
+          <div><div class="mkey">Trigger</div><div class="mval">CONFIRMED + no prior outreach</div></div>
+          <div><div class="mkey">Output</div><div class="mval">Gmail drafts + tracker update</div></div>
+        </div>
+        <div class="asum">Finds all CONFIRMED influencers with no outreach drafted. Uses their custom hook and connection notes to write personalised Gmail pitches. Updates tracker status.</div>
+        <div class="achips"><div class="chip">Emails drafted: <span class="cn">0</span></div></div>
+      </div>
+      <div class="afoot">
+        <div class="nrun">Next: <span>Tomorrow 8:00 AM</span></div>
+        <button class="btn bg sm" onclick="alert('Cowork sidebar → Scheduled Tasks → ioh-outreach-pipeline → Run now')">▶ Run Now</button>
+      </div>
+    </div>
+
+    <div class="acard">
+      <div class="ahead">
+        <div class="aicon" style="background:#1A1A3A;">🔄</div>
+        <div style="flex:1"><div class="aname">Follow-Up Agent</div><div class="asched">Runs Wednesday — 9:00 AM</div></div>
+        <div class="sbadge s-idle">IDLE</div>
+      </div>
+      <div class="abody">
+        <div class="ameta">
+          <div><div class="mkey">Last Run</div><div class="mval">Never</div></div>
+          <div><div class="mkey">Next Run</div><div class="mval gd">Wed 16 Apr — 9:00 AM</div></div>
+          <div><div class="mkey">Trigger</div><div class="mval">Outreach 7+ or 21+ days unanswered</div></div>
+          <div><div class="mkey">Output</div><div class="mval">Day 7 + Day 21 Gmail drafts</div></div>
+        </div>
+        <div class="asum">Scans for unanswered outreach. Drafts Day 7 short follow-ups and Day 21 soft-close emails. Updates tracker notes with follow-up dates.</div>
+        <div class="achips"><div class="chip">Day 7: <span class="cn">0</span></div><div class="chip">Day 21: <span class="cn">0</span></div></div>
+      </div>
+      <div class="afoot">
+        <div class="nrun">Next: <span>Wed 16 Apr 9:00 AM</span></div>
+        <button class="btn bg sm" onclick="alert('Cowork sidebar → Scheduled Tasks → ioh-followup-agent → Run now')">▶ Run Now</button>
+      </div>
+    </div>
+
+    <div class="acard">
+      <div class="ahead">
+        <div class="aicon" style="background:#2A1A00;">📋</div>
+        <div style="flex:1"><div class="aname">Weekly Ops Agent</div><div class="asched">Runs Monday — 7:30 AM</div></div>
+        <div class="sbadge s-idle">IDLE</div>
+      </div>
+      <div class="abody">
+        <div class="ameta">
+          <div><div class="mkey">Last Run</div><div class="mval">Never</div></div>
+          <div><div class="mkey">Next Run</div><div class="mval gd">Mon 20 Apr — 7:30 AM</div></div>
+          <div><div class="mkey">Trigger</div><div class="mval">Every Monday morning</div></div>
+          <div><div class="mkey">Output</div><div class="mval">Refreshed Ops Doc + weekly brief</div></div>
+        </div>
+        <div class="asum">Reads the tracker, rebuilds the Weekly Ops Doc with fresh dates, updates task statuses, and delivers a Monday morning pipeline briefing.</div>
+        <div class="achips"><div class="chip">Tasks updated: <span class="cn">0</span></div></div>
+      </div>
+      <div class="afoot">
+        <div class="nrun">Next: <span>Mon 20 Apr 7:30 AM</span></div>
+        <button class="btn bg sm" onclick="alert('Cowork sidebar → Scheduled Tasks → ioh-weekly-ops → Run now')">▶ Run Now</button>
+      </div>
+    </div>
+
+    <div class="acard">
+      <div class="ahead">
+        <div class="aicon" style="background:#1A001A;">🔍</div>
+        <div style="flex:1"><div class="aname">Prospecting Agent</div><div class="asched">Runs Friday — 10:00 AM</div></div>
+        <div class="sbadge s-idle">IDLE</div>
+      </div>
+      <div class="abody">
+        <div class="ameta">
+          <div><div class="mkey">Last Run</div><div class="mval">Never</div></div>
+          <div><div class="mkey">Next Run</div><div class="mval gd">Fri 18 Apr — 10:00 AM</div></div>
+          <div><div class="mkey">Trigger</div><div class="mval">Every Friday — rotates AU/UK/USA</div></div>
+          <div><div class="mkey">Output</div><div class="mval">3–5 new prospects added to tracker</div></div>
+        </div>
+        <div class="asum">Web-searches for new high-fit influencers and podcasts not already in the tracker. Rotates weekly focus between markets and niches.</div>
+        <div class="achips"><div class="chip">Added: <span class="cn">0</span></div><div class="chip">Total: <span class="cn" id="tc2">32</span></div></div>
+      </div>
+      <div class="afoot">
+        <div class="nrun">Next: <span>Fri 18 Apr 10:00 AM</span></div>
+        <button class="btn bg sm" onclick="alert('Cowork sidebar → Scheduled Tasks → ioh-prospecting-agent → Run now')">▶ Run Now</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="twocol">
+    <div class="alog">
+      <div class="loghead">Activity Log <span id="log-count">0 entries</span></div>
+      <div id="log-body"><div class="logempty">No agent runs recorded yet. Activity appears here automatically after each run.</div></div>
+    </div>
+    <div>
+      <div class="scard">
+        <div class="schead">Pipeline Funnel</div>
+        <div class="scbody" id="funnel"></div>
+      </div>
+      <div class="scard">
+        <div class="schead">Agent Schedule — This Week</div>
+        <div class="scbody">
+          <div class="srow"><div class="sday">MON</div><div class="spill" style="background:var(--gnd);color:var(--grn);">📋 Weekly Ops — 7:30 AM</div></div>
+          <div class="srow"><div class="sday today">TUE ★</div><div class="spill" style="background:var(--gd);color:var(--wh);">📤 Outreach Pipeline — 8:00 AM</div></div>
+          <div class="srow"><div class="sday">WED</div><div class="spill" style="background:var(--bld);color:#70C0F0;">🔄 Follow-Up Agent — 9:00 AM</div></div>
+          <div class="srow"><div class="sday">THU</div><div class="spill" style="background:var(--gd);color:var(--wh);">📤 Outreach Pipeline — 8:00 AM</div></div>
+          <div class="srow"><div class="sday">FRI</div><div class="spill" style="background:#2A1A4A;color:#C8A8F8;">🔍 Prospecting — 10:00 AM</div></div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid #1A1A1A;font-size:10px;color:var(--gr);">★ Today is Tuesday — Outreach Pipeline runs next</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div><span class="brand">| MRFOXX |</span> &nbsp;·&nbsp; IOH Agent Dashboard &nbsp;·&nbsp; wade.foxx@8figureclosers.com</div>
+    <div id="last-updated">—</div>
+  </div>
+</div>
+
+<!-- INFLUENCERS -->
+<div class="page" id="page-influencers">
+  <div class="tbar">
+    <input class="sbox" type="text" placeholder="Search name, handle, niche, notes..." id="isearch" oninput="renderInf()">
+    <select class="fsel" id="icountry" onchange="renderInf()">
+      <option value="">All Countries</option>
+      <option value="Australia">🇦🇺 Australia</option>
+      <option value="UK">🇬🇧 UK</option>
+      <option value="USA">🇺🇸 USA</option>
+    </select>
+    <select class="fsel" id="istatus" onchange="renderInf()">
+      <option value="">All Statuses</option>
+    </select>
+    <select class="fsel" id="isort" onchange="renderInf()">
+      <option value="default">📌 Default (Status)</option>
+      <option value="newest">🆕 Newest Added</option>
+      <option value="oldest">🕰 Oldest Added</option>
+      <option value="name">🔤 Name A–Z</option>
+      <option value="followers">👥 Followers</option>
+    </select>
+    <button class="btn bg" onclick="oAddI()">+ Add</button>
+    <button class="btn bd" onclick="openManageStatuses()" title="Add or remove custom statuses">⚙️ Statuses</button>
+    <button class="btn bd" id="arc-toggle" onclick="toggleArchived()">📦 View Archived <span id="arc-count" style="background:#2A2A2A;padding:1px 6px;border-radius:8px;font-size:10px;margin-left:4px;">0</span></button>
+    <button class="btn bd" onclick="forceResyncContacts()" title="Re-import all researched contact details">🔄 Sync Contacts</button>
+    <button class="btn bd" onclick="expData()">⬇ Export</button>
+  </div>
+  <div id="arc-banner" style="display:none;background:#1A1A00;border:1px solid #4A4A00;border-left:4px solid #C4A000;border-radius:4px;padding:10px 16px;margin-bottom:12px;font-size:12px;color:#D4C040;display:none;">📦 Showing archived influencers — <button onclick="toggleArchived()" style="background:none;border:none;color:#C4A000;cursor:pointer;font-size:12px;font-weight:700;text-decoration:underline;">Back to active</button></div>
+  <div class="twrap">
+    <table>
+      <thead><tr>
+        <th onclick="srtI('handle')">Instagram ↕</th>
+        <th onclick="srtI('name')">Name ↕</th>
+        <th onclick="srtI('country')">Country ↕</th>
+        <th>Followers</th>
+        <th>Niche</th>
+        <th onclick="srtI('status')">Status ↕</th>
+        <th>Deal Type</th>
+        <th>Podcast / Show</th>
+        <th>Notes</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody id="itbody"></tbody>
+    </table>
+  </div>
+  <div class="tcnt" id="icnt"></div>
+</div>
+
+<!-- PODCASTS -->
+<div class="page" id="page-podcasts">
+  <div class="tbar">
+    <input class="sbox" type="text" placeholder="Search show, host, angle, notes..." id="psearch" oninput="renderPod()">
+    <select class="fsel" id="pcountry" onchange="renderPod()">
+      <option value="">All Countries</option>
+      <option value="Australia">🇦🇺 Australia</option>
+      <option value="UK">🇬🇧 UK</option>
+      <option value="USA">🇺🇸 USA</option>
+    </select>
+    <select class="fsel" id="ppriority" onchange="renderPod()">
+      <option value="">All Priorities</option>
+      <option value="🔥 HIGH">🔥 High</option>
+      <option value="⚡ MED">⚡ Med</option>
+      <option value="📌 LOW">📌 Low</option>
+    </select>
+    <button class="btn bg" onclick="oAddP()">+ Add</button>
+    <button class="btn bd" onclick="expData()">⬇ Export</button>
+  </div>
+  <div class="twrap">
+    <table>
+      <thead><tr>
+        <th onclick="srtP('showName')">Show ↕</th>
+        <th onclick="srtP('host')">Host ↕</th>
+        <th onclick="srtP('country')">Country ↕</th>
+        <th>Audience</th>
+        <th>Episode Angle for Jake</th>
+        <th onclick="srtP('status')">Status ↕</th>
+        <th onclick="srtP('priority')">Priority ↕</th>
+        <th>Jake's Hook</th>
+        <th>Notes</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody id="ptbody"></tbody>
+    </table>
+  </div>
+  <div class="tcnt" id="pcnt"></div>
+</div>
+
+<!-- AGENTS DETAIL -->
+<!-- ══ OUTREACH QUEUE ══ -->
+<div class="page" id="page-queue">
+
+  <!-- EMAIL ACCOUNT SETTINGS -->
+  <!-- MULTI-ACCOUNT EMAIL MANAGER -->
+  <div style="background:var(--dk);border:1px solid #222;border-radius:5px;margin-bottom:16px;overflow:hidden;">
+    <div style="padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--grn);flex-shrink:0;"></div>
+        <span style="font-size:12px;color:var(--gr);">Gmail connected:</span>
+        <span style="font-size:12px;color:var(--wh);font-weight:700;">wade@toruscap.vc</span>
+        <div style="width:1px;height:14px;background:#333;margin:0 4px;"></div>
+        <span style="font-size:12px;color:var(--gr);">Sending as:</span>
+        <span id="active-profile-badge" style="font-size:12px;font-weight:700;color:var(--gl);">Select a profile →</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn bg sm" onclick="toggleProfileManager()">👤 Email Profiles</button>
+        <a href="https://mail.google.com/mail/u/0/#drafts" target="_blank" class="btn bd sm" style="text-decoration:none;">Open Gmail Drafts ↗</a>
+      </div>
+    </div>
+
+    <div id="profile-manager" style="display:none;border-top:1px solid #1A1A1A;padding:18px 20px;">
+
+      <!-- HOW IT WORKS -->
+      <div style="background:#0A1208;border:1px solid #1A3A22;border-radius:4px;padding:11px 14px;margin-bottom:16px;font-size:12px;color:var(--grn);line-height:1.7;">
+        <strong>How this works — no login/logout needed.</strong> Add each email as a <strong>Send As alias</strong> in Gmail (one-time setup per address). All your inboxes share one Gmail connection but send from the right address automatically.
+        <a href="https://mail.google.com/mail/u/0/#settings/accounts" target="_blank" style="color:var(--grn);margin-left:8px;font-weight:700;">Open Gmail → Accounts Settings ↗</a>
+      </div>
+
+      <!-- PROFILE CARDS -->
+      <div id="profile-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;"></div>
+
+      <!-- ADD PROFILE FORM -->
+      <div style="border-top:1px solid #1A1A1A;padding-top:14px;">
+        <div style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Add Email Profile</div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="flex:0 0 120px;">
+            <div style="font-size:10px;color:var(--gr);margin-bottom:4px;">Label</div>
+            <input id="np-label" class="sbox" placeholder="e.g. IOH" style="font-size:12px;">
+          </div>
+          <div style="flex:0 0 46px;">
+            <div style="font-size:10px;color:var(--gr);margin-bottom:4px;">Icon</div>
+            <input id="np-icon" class="sbox" placeholder="🏥" style="font-size:14px;text-align:center;padding:7px 6px;">
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <div style="font-size:10px;color:var(--gr);margin-bottom:4px;">Email Address</div>
+            <input id="np-email" class="sbox" placeholder="e.g. jake@ioh.com.au" style="font-size:12px;">
+          </div>
+          <div style="flex:1;min-width:160px;">
+            <div style="font-size:10px;color:var(--gr);margin-bottom:4px;">Display Name</div>
+            <input id="np-name" class="sbox" placeholder="e.g. Jake — IOH Founder" style="font-size:12px;">
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <div style="font-size:10px;color:var(--gr);margin-bottom:4px;">Email Signature (optional)</div>
+            <input id="np-sig" class="sbox" placeholder="e.g. Jake | ioh.com.au | @ioh.program" style="font-size:12px;">
+          </div>
+          <button class="btn bg sm" onclick="addProfile()" style="align-self:flex-end;margin-bottom:1px;">+ Add</button>
+        </div>
+      </div>
+
+      <!-- SEND AS SETUP GUIDE -->
+      <div style="border-top:1px solid #1A1A1A;margin-top:14px;padding-top:12px;">
+        <div style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">One-Time Send As Setup (per email)</div>
+        <div style="font-size:11px;color:#AAA;line-height:1.9;">
+          1. Go to <a href="https://mail.google.com/mail/u/0/#settings/accounts" target="_blank" style="color:var(--gl);">Gmail Settings → Accounts and Import</a><br>
+          2. Under <strong style="color:var(--wh);">"Send mail as"</strong> → click <strong style="color:var(--wh);">Add another email address</strong><br>
+          3. Enter the email + display name → click Next<br>
+          4. A verification code is sent to that inbox — enter it → Done<br>
+          5. Repeat for each email address. No login/logout ever needed again.
+        </div>
+        <button class="btn bd sm" style="margin-top:10px;" onclick="toggleProfileManager()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS BANNER -->
+  <div style="background:var(--dk);border:1px solid #222;border-left:4px solid var(--gd);border-radius:5px;padding:16px 20px;margin-bottom:22px;display:flex;align-items:flex-start;gap:16px;">
+    <div style="font-size:24px;flex-shrink:0;">📤</div>
+    <div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:var(--wh);margin-bottom:6px;">How Outreach Works</div>
+      <div style="font-size:12px;color:var(--gr);line-height:1.8;">
+        <strong style="color:var(--grl);">1.</strong> Add your personal notes below for each person &nbsp;→&nbsp;
+        <strong style="color:var(--grl);">2.</strong> Click <strong style="color:var(--gl);">Approve</strong> to queue them &nbsp;→&nbsp;
+        <strong style="color:var(--grl);">3.</strong> Agent drafts personalised emails using your notes &nbsp;→&nbsp;
+        <strong style="color:var(--grl);">4.</strong> You review &amp; send from <strong style="color:var(--gl);">Gmail → Drafts</strong>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="https://mail.google.com/mail/u/0/#drafts" target="_blank" style="background:var(--gd);color:var(--wh);padding:6px 14px;border-radius:4px;font-size:12px;font-weight:700;font-family:Arial,sans-serif;text-decoration:none;">Open Gmail Drafts ↗</a>
+        <button class="btn bd" onclick="showPage('influencers')" style="font-size:12px;">View All Influencers</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGE TABS -->
+  <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+    <button class="btn" id="qt-waiting" onclick="setQueueTab('waiting')" style="background:var(--gd);color:var(--wh);font-size:12px;">⏳ Awaiting Approval <span id="qt-waiting-cnt" style="background:rgba(255,255,255,.2);padding:1px 7px;border-radius:8px;margin-left:4px;font-size:10px;">0</span></button>
+    <button class="btn bd" id="qt-approved" onclick="setQueueTab('approved')" style="font-size:12px;">✅ Approved — Agent Will Draft <span id="qt-approved-cnt" style="background:#2A2A2A;padding:1px 7px;border-radius:8px;margin-left:4px;font-size:10px;">0</span></button>
+    <button class="btn bd" id="qt-sent" onclick="setQueueTab('sent')" style="font-size:12px;">📩 Drafted / Sent <span id="qt-sent-cnt" style="background:#2A2A2A;padding:1px 7px;border-radius:8px;margin-left:4px;font-size:10px;">0</span></button>
+  </div>
+
+  <div id="queue-body"></div>
+
+</div>
+
+<!-- APPROVE MODAL (per-influencer personalisation before approving) -->
+<div class="mo" id="mo-approve">
+  <div class="md" style="width:700px;">
+    <div class="mhead">
+      <div>
+        <h2 id="appr-title">Approve Outreach</h2>
+        <div id="appr-sub" style="font-size:11px;color:var(--gr);margin-top:3px;"></div>
+      </div>
+      <button class="mclose" onclick="cM('mo-approve')">&#x2715;</button>
+    </div>
+    <div class="mbody">
+      <div style="background:#0A1208;border:1px solid #1A3A22;border-radius:4px;padding:11px 14px;margin-bottom:16px;font-size:12px;color:var(--grn);">
+        ✅ Once approved, the outreach agent will draft a personalised email using these notes. You then review and send from Gmail Drafts.
+      </div>
+      <div class="fg">
+        <!-- STRATEGY SELECTOR -->
+        <div class="fgf">
+          <label>Outreach Strategy <span style="color:var(--gl);font-weight:400;font-size:10px;">— this shapes the entire email</span></label>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px;" id="strategy-grid">
+            <div class="strategy-card active" data-strategy="podcast-invite" onclick="selectStrategy('podcast-invite')">
+              <div style="font-size:16px;margin-bottom:4px;">🎙</div>
+              <div style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:var(--wh);">IOH Podcast Invite</div>
+              <div style="font-size:10px;color:var(--gr);margin-top:2px;line-height:1.4;">Invite them onto the IOH show. Mutual — Jake also offers to be on theirs. Best first touch.</div>
+              <div style="margin-top:6px;background:var(--gnd);color:var(--grn);font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;display:inline-block;">RECOMMENDED</div>
+            </div>
+            <div class="strategy-card" data-strategy="podcast-guest" onclick="selectStrategy('podcast-guest')">
+              <div style="font-size:16px;margin-bottom:4px;">🎤</div>
+              <div style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:var(--wh);">Jake as Podcast Guest</div>
+              <div style="font-size:10px;color:var(--gr);margin-top:2px;line-height:1.4;">Pitch Jake as a guest on their existing show. Best for people with large established podcasts.</div>
+            </div>
+            <div class="strategy-card" data-strategy="ambassador" onclick="selectStrategy('ambassador')">
+              <div style="font-size:16px;margin-bottom:4px;">🤝</div>
+              <div style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:var(--wh);">Ambassador / Affiliate</div>
+              <div style="font-size:10px;color:var(--gr);margin-top:2px;line-height:1.4;">Direct partnership pitch. Best for warm leads who already know IOH or have expressed interest.</div>
+            </div>
+            <div class="strategy-card" data-strategy="cert" onclick="selectStrategy('cert')">
+              <div style="font-size:16px;margin-bottom:4px;">🏥</div>
+              <div style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:var(--wh);">Blood Cert Candidate</div>
+              <div style="font-size:10px;color:var(--gr);margin-top:2px;line-height:1.4;">Invite them to get certified as an IOH blood testing practitioner. Best for health coaches, trainers with large followings.</div>
+            </div>
+          </div>
+          <input type="hidden" id="appr-strategy" value="podcast-invite">
+        </div>
+
+        <!-- STRATEGY CONTEXT BOX -->
+        <div class="fgf" id="strategy-context" style="background:#0A1208;border:1px solid #1A3A22;border-radius:4px;padding:12px 14px;font-size:12px;color:var(--grn);line-height:1.7;"></div>
+
+        <div class="fgf"><label>Opening Hook (first line Jake uses) <span style="color:var(--gr);font-weight:400;">— leave blank to auto-generate from strategy</span></label>
+          <input id="appr-hook" placeholder="e.g. I caught your Hyrox recovery episode — one of the best takes on blood-based performance I've heard.">
+        </div>
+        <div class="fgf"><label>Personal Connection / How Jake Knows Them</label>
+          <textarea id="appr-know" style="min-height:60px;" placeholder="e.g. Met at AFR Health Summit March 2025. Mutual friend Nick Bell. Jake follows them for 2 years."></textarea>
+        </div>
+        <div class="fgf"><label>Specific Angles to Reference <span style="color:var(--gr);font-weight:400;">— recent content, posts, things they've said</span></label>
+          <textarea id="appr-angles" style="min-height:70px;" placeholder="e.g. Reference their post about Zone 2 training from Feb. They mentioned wanting bloodwork done on their podcast. They're interested in certifying their coaching staff."></textarea>
+        </div>
+        <div><label>Preferred CTA</label>
+          <select id="appr-cta" class="isel" style="width:100%;font-size:13px;padding:7px 10px;">
+            <option value="call">Worth a 10-minute call?</option>
+            <option value="deck">Send program overview first</option>
+            <option value="meet">In-person if possible</option>
+            <option value="collab">Send co-creation proposal</option>
+          </select>
+        </div>
+        <div><label>Temperature Check</label>
+          <select id="appr-temp" class="isel" style="width:100%;font-size:13px;padding:7px 10px;">
+            <option value="cold">❄️ Cold — no prior contact</option>
+            <option value="warm">🌤 Warm — some prior contact</option>
+            <option value="hot">🔥 Hot — active interest / met in person</option>
+          </select>
+        </div>
+        <div class="fgf">
+          <label>Email Copy <span style="color:var(--gr);font-weight:400;">— edit directly, this is exactly what the agent will draft</span></label>
+          <div style="display:flex;gap:8px;margin-bottom:6px;">
+            <button class="btn bd sm" onclick="refreshApprPreview()">🔄 Regenerate</button>
+            <button class="btn bd sm" onclick="clearApprCopy()">✕ Clear</button>
+            <span style="font-size:10px;color:var(--gr);align-self:center;">Edit the copy below — your changes are saved exactly as written</span>
+          </div>
+          <textarea id="appr-copy" style="width:100%;min-height:200px;background:#0A0A0A;border:1px solid #2A2A2A;border-left:3px solid var(--gd);border-radius:4px;padding:14px 16px;color:#CCC;font-size:12px;line-height:1.8;font-family:Calibri,sans-serif;outline:none;resize:vertical;" placeholder="Click Regenerate to generate copy from your notes, then edit as needed..."></textarea>
+          <div style="margin-top:6px;font-size:10px;color:var(--gr);">
+            <strong style="color:var(--gl);">Subject line:</strong>
+            <input id="appr-subject" class="sbox" placeholder="e.g. IOH x Gary Brecka — Partnership" style="display:inline-block;width:380px;margin-left:8px;padding:4px 10px;font-size:12px;">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn bd" onclick="cM('mo-approve')">Cancel</button>
+      <button class="btn bd" onclick="saveApprovalNotes(false)" style="background:#1A1A00;color:#D4C040;border-color:#4A4A00;">💾 Save Notes Only</button>
+      <button class="btn bg" onclick="saveApprovalNotes(true)">✅ Approve for Outreach</button>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-agents">
+  <div style="background:var(--dk);border:1px solid #222;border-left:4px solid var(--gd);border-radius:5px;padding:16px 20px;margin-bottom:24px;">
+    <div style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;margin-bottom:8px;">⚡ First-Time Setup</div>
+    <div style="font-size:12px;color:var(--gr);margin-bottom:12px;">Each agent needs one manual run to grant Gmail + file access. Cowork sidebar → Scheduled Tasks → click each → Run now.</div>
+    <div style="display:flex;gap:9px;flex-wrap:wrap;">
+      <button class="btn bd sm" onclick="alert('Cowork → Scheduled Tasks → ioh-outreach-pipeline → Run now')">📤 Approve Outreach</button>
+      <button class="btn bd sm" onclick="alert('Cowork → Scheduled Tasks → ioh-followup-agent → Run now')">🔄 Approve Follow-Up</button>
+      <button class="btn bd sm" onclick="alert('Cowork → Scheduled Tasks → ioh-weekly-ops → Run now')">📋 Approve Ops</button>
+      <button class="btn bd sm" onclick="alert('Cowork → Scheduled Tasks → ioh-prospecting-agent → Run now')">🔍 Approve Prospecting</button>
+    </div>
+  </div>
+  <div class="twocol">
+    <div class="alog">
+      <div class="loghead">Activity Log <span id="ag-log-count">0 entries</span></div>
+      <div id="ag-log-body"><div class="logempty">No agent runs yet.</div></div>
+    </div>
+    <div>
+      <div class="scard">
+        <div class="schead">Pipeline Funnel</div>
+        <div class="scbody" id="ag-funnel"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INF MODAL -->
+<div class="mo" id="mo-inf">
+  <div class="md">
+    <div class="mhead"><h2 id="inf-mtitle">Add Influencer</h2><button class="mclose" onclick="cM('mo-inf')">&#x2715;</button></div>
+    <div class="mtabs">
+      <div class="mtab active" onclick="swTab(this,'inf-det')">Details</div>
+      <div class="mtab" onclick="swTab(this,'inf-out')">Outreach</div>
+      <div class="mtab" onclick="swTab(this,'inf-con')">Connection</div>
+    </div>
+    <div class="mbody">
+      <div class="mpanel active" id="inf-det">
+        <div class="fg">
+          <div><label>Handle (@)</label><input id="if-h" placeholder="@username"></div>
+          <div><label>Full Name</label><input id="if-n" placeholder="First Last"></div>
+          <div><label>Country</label><select id="if-c"><option>Australia</option><option>UK</option><option>UK / Global</option><option>USA</option><option>UK/USA</option><option>UK/AU</option><option>Global</option></select></div>
+          <div><label>Followers</label><input id="if-f" placeholder="e.g. 120K"></div>
+          <div class="fgf"><label>Niche</label><input id="if-ni" placeholder="e.g. Biohacking / Longevity / Fitness"></div>
+          <div><label>Status</label><select id="if-st"><option value="🔍 PROSPECT">🔍 Prospect</option><option value="✅ CONFIRMED">✅ Confirmed</option><option value="🔥 ACTIVE PAID">🔥 Active Paid</option><option value="🎓 IOH Student">🎓 IOH Student</option></select></div>
+          <div><label>Deal Type</label><input id="if-d" placeholder="e.g. Ambassador + Affiliate"></div>
+          <div><label>Commission %</label><input id="if-cm" placeholder="e.g. 10%"></div>
+          <div><label>Rev Share (first 6)</label><input id="if-r1" placeholder="e.g. 50%"></div>
+          <div><label>Rev Share (after 6)</label><input id="if-r2" placeholder="e.g. 20%"></div>
+          <div class="fgf"><label>Instagram URL</label><input id="if-ig" placeholder="https://www.instagram.com/username/"></div>
+          <div><label>Email (Outreach)</label><input id="if-em" placeholder="email@example.com"></div>
+          <div><label>Phone / WhatsApp</label><input id="if-ph" placeholder="+61 400 000 000"></div>
+          <div><label>Website</label><input id="if-ws" placeholder="https://example.com"></div>
+          <div class="fgf"><label>Notes</label><textarea id="if-nt" placeholder="Meeting notes, status context, key details..."></textarea></div>
+        </div>
+      </div>
+      <div class="mpanel" id="inf-out">
+        <div class="fg">
+          <div class="fgf"><label>Jake's Custom Opening Hook</label><input id="if-hk" placeholder="e.g. Caught your Hyrox recovery episode — one of the best takes on blood-based performance I've heard."><div class="hint">AI uses this as the exact opening line. Leave blank to auto-generate from niche.</div></div>
+          <div class="fgf"><label>Specific Angles to Reference</label><textarea id="if-ang" placeholder="e.g. Reference their Zone 2 post from Feb. They mentioned wanting bloodwork. Interested in certifying their coaching staff."></textarea></div>
+          <div><label>Preferred CTA</label><select id="if-cta"><option value="">Auto</option><option value="call">10-min call</option><option value="deck">Send overview first</option><option value="meet">In-person</option></select></div>
+          <div><label>Temperature</label><select id="if-tmp"><option value="cold">❄️ Cold</option><option value="warm">🌤 Warm</option><option value="hot">🔥 Hot</option></select></div>
+          <div class="fgf"><label>Email Preview</label>
+            <div class="eprev" id="if-prev">Fill in details and click Refresh.</div>
+            <button class="btn bd sm" style="margin-top:8px;" onclick="prevI()">🔄 Refresh Preview</button>
+          </div>
+        </div>
+      </div>
+      <div class="mpanel" id="inf-con">
+        <div class="fg">
+          <div class="fgf"><label>How does Jake know them?</label><textarea id="if-kn" placeholder="e.g. Met at AFR Health Summit March 2025. Mutual connection through Nick Bell."></textarea></div>
+          <div class="fgf"><label>Personal Details to Reference</label><textarea id="if-pe" placeholder="e.g. Based in Byron Bay, recently started Hyrox, wants bloodwork, large trainer following."></textarea></div>
+          <div class="fgf"><label>Prior Contact Attempts</label><textarea id="if-pr" placeholder="e.g. Jake DM'd IG 12 Apr — no response yet."></textarea></div>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot"><button class="btn bd" onclick="cM('mo-inf')">Cancel</button><button class="btn bg" onclick="svI()">Save</button></div>
+  </div>
+</div>
+
+<!-- POD MODAL -->
+<div class="mo" id="mo-pod">
+  <div class="md">
+    <div class="mhead"><h2 id="pod-mtitle">Add Podcast</h2><button class="mclose" onclick="cM('mo-pod')">&#x2715;</button></div>
+    <div class="mtabs">
+      <div class="mtab active" onclick="swTab(this,'pod-det')">Details</div>
+      <div class="mtab" onclick="swTab(this,'pod-out')">Outreach</div>
+      <div class="mtab" onclick="swTab(this,'pod-con')">Connection</div>
+    </div>
+    <div class="mbody">
+      <div class="mpanel active" id="pod-det">
+        <div class="fg">
+          <div><label>Show Name</label><input id="pf-sn" placeholder="Podcast name"></div>
+          <div><label>Host</label><input id="pf-h" placeholder="Host name"></div>
+          <div><label>Country</label><select id="pf-c"><option>Australia</option><option>UK</option><option>USA</option><option>UK/Global</option><option>USA/UK</option><option>Germany/Global</option></select></div>
+          <div><label>Audience Size</label><input id="pf-a" placeholder="e.g. ~500K downloads"></div>
+          <div class="fgf"><label>Niche Fit</label><input id="pf-ni" placeholder="e.g. Longevity / Biohacking"></div>
+          <div class="fgf"><label>Episode Angle for Jake</label><textarea id="pf-ea" style="min-height:60px;" placeholder="What would Jake talk about on this show?"></textarea></div>
+          <div><label>Booking / Guest Email</label><input id="pf-ct" placeholder="bookings@show.com or @handle"></div>
+          <div><label>Phone</label><input id="pf-ph" placeholder="+61 400 000 000"></div>
+          <div><label>Website</label><input id="pf-ws" placeholder="https://showname.com"></div>
+          <div class="fgf"><label>Guest Submission URL</label><input id="pf-bu" placeholder="https://showname.com/be-a-guest"></div>
+          <div><label>Status</label><select id="pf-st"><option value="📬 Outreach Needed">📬 Outreach Needed</option><option value="✅ Booked">✅ Booked</option><option value="🎙 Recorded">🎙 Recorded</option></select></div>
+          <div><label>Priority</label><select id="pf-pr"><option value="🔥 HIGH">🔥 High</option><option value="⚡ MED">⚡ Medium</option><option value="📌 LOW">📌 Low</option></select></div>
+          <div class="fgf"><label>Notes</label><textarea id="pf-nt" placeholder="Warm intros, booking context..."></textarea></div>
+        </div>
+      </div>
+      <div class="mpanel" id="pod-out">
+        <div class="fg">
+          <div class="fgf"><label>Jake's Custom Opening Hook</label><input id="pf-hk" placeholder="e.g. Been listening for a while — the episode on [topic] was exactly the conversation I want to continue."><div class="hint">Left blank = AI auto-generates. Filled = AI uses this verbatim.</div></div>
+          <div class="fgf"><label>Talking Points Jake Wants to Cover</label><textarea id="pf-pts" placeholder="e.g. 1. Why blood testing is the missing link. 2. What our cohort data shows. 3. The $25K cert program."></textarea></div>
+          <div class="fgf"><label>Email Preview</label>
+            <div class="eprev" id="pf-prev">Fill in details and click Refresh.</div>
+            <button class="btn bd sm" style="margin-top:8px;" onclick="prevP()">🔄 Refresh Preview</button>
+          </div>
+        </div>
+      </div>
+      <div class="mpanel" id="pod-con">
+        <div class="fg">
+          <div class="fgf"><label>How does Jake know the host?</label><textarea id="pf-kn" placeholder="e.g. Mutual connection through Christie Whitehill."></textarea></div>
+          <div class="fgf"><label>Prior Booking Attempts</label><textarea id="pf-pr2" placeholder="e.g. Emailed booking team 8 Apr — no reply."></textarea></div>
+          <div><label>Temperature</label><select id="pf-tmp"><option value="cold">❄️ Cold</option><option value="warm">🌤 Warm</option><option value="hot">🔥 Hot</option></select></div>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot"><button class="btn bd" onclick="cM('mo-pod')">Cancel</button><button class="btn bg" onclick="svP()">Save</button></div>
+  </div>
+</div>
+
+<!-- NOTES MODAL -->
+<div class="mo" id="mo-notes">
+  <div class="md" style="max-width:480px;">
+    <div class="mhead"><h2 id="notes-t">Notes</h2><button class="mclose" onclick="cM('mo-notes')">&#x2715;</button></div>
+    <div class="mbody"><p id="notes-b" style="font-size:13px;color:var(--grl);line-height:1.8;white-space:pre-wrap;"></p></div>
+  </div>
+</div>
+
+<!-- STATUS MANAGER MODAL -->
+<div class="mo" id="mo-statuses">
+  <div class="md" style="max-width:480px;">
+    <div class="mhead"><h2>⚙️ Manage Statuses</h2><button class="mclose" onclick="cM('mo-statuses')">&#x2715;</button></div>
+    <div class="mbody" id="stat-modal-body"></div>
+    <div class="mfoot"><button class="btn bd" onclick="cM('mo-statuses')">Done</button></div>
+  </div>
+</div>
+
+<!-- CRM PROFILE MODAL -->
+<div class="mo" id="mo-profile">
+  <div class="md" style="width:780px;">
+    <div class="mhead">
+      <div>
+        <h2 id="prof-name" style="margin-bottom:3px;">Profile</h2>
+        <div id="prof-handle" style="font-size:11px;color:var(--gr);"></div>
+      </div>
+      <button class="mclose" onclick="cM('mo-profile')">&#x2715;</button>
+    </div>
+    <div class="mtabs">
+      <div class="mtab active" onclick="swTab(this,'prof-overview')">Overview</div>
+      <div class="mtab" onclick="swTab(this,'prof-contact')">Contact</div>
+      <div class="mtab" onclick="swTab(this,'prof-comms')">Communications</div>
+      <div class="mtab" onclick="swTab(this,'prof-revenue')">Revenue & Payouts</div>
+      <div class="mtab" onclick="swTab(this,'prof-actions')">Next Actions</div>
+    </div>
+    <div class="mbody">
+
+      <!-- OVERVIEW -->
+      <div class="mpanel active" id="prof-overview">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          <div style="background:#111;border:1px solid #222;border-radius:4px;padding:12px 14px;">
+            <div style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Stage</div>
+            <select id="prof-status-sel" class="isel" style="width:100%;font-size:13px;padding:6px 10px;" onchange="updateProfileStatus()"></select>
+          </div>
+          <div style="background:#111;border:1px solid #222;border-radius:4px;padding:12px 14px;">
+            <div style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Temperature</div>
+            <select id="prof-temp-sel" class="isel" style="width:100%;font-size:13px;padding:6px 10px;" onchange="updateProfileTemp()">
+              <option value="cold">❄️ Cold</option><option value="warm">🌤 Warm</option><option value="hot">🔥 Hot</option>
+            </select>
+          </div>
+        </div>
+        <div id="prof-overview-body" style="font-size:12px;color:var(--grl);line-height:1.9;"></div>
+      </div>
+
+      <!-- CONTACT DETAILS -->
+      <div class="mpanel" id="prof-contact">
+        <div style="margin-bottom:16px;font-size:11px;color:var(--gr);">Contact details found via web research. Verify before outreach. Click ⎘ to copy to clipboard.</div>
+        <div id="prof-contact-body"></div>
+        <div style="margin-top:20px;border-top:1px solid #1A1A1A;padding-top:16px;">
+          <div style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Edit Contact Details</div>
+          <div class="fg">
+            <div><label>Email</label><input id="pc-email" placeholder="outreach@example.com" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;"></div>
+            <div><label>Phone / WhatsApp</label><input id="pc-phone" placeholder="+61 400 000 000" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;"></div>
+            <div class="fgf"><label>Website</label><input id="pc-website" placeholder="https://example.com" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;"></div>
+            <div class="fgf"><label>Contact Source / Notes</label><input id="pc-source" placeholder="e.g. IG bio, management (Endorse Co), website" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;"></div>
+          </div>
+          <button class="btn bg" style="margin-top:12px;" onclick="saveContact()">Save Contact Details</button>
+        </div>
+      </div>
+
+      <!-- COMMS LOG -->
+      <div class="mpanel" id="prof-comms">
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11px;color:var(--gr);margin-bottom:10px;">Log all outreach, replies, DMs, calls here. This feeds the follow-up agent.</div>
+          <div style="display:flex;gap:8px;">
+            <select id="comm-type" class="isel" style="font-size:12px;padding:6px 10px;">
+              <option value="📤 Email Sent">📤 Email Sent</option>
+              <option value="📩 DM Sent">📩 DM Sent</option>
+              <option value="💬 Reply Received">💬 Reply Received</option>
+              <option value="📞 Call Had">📞 Call Had</option>
+              <option value="🤝 Meeting">🤝 Meeting</option>
+              <option value="📋 Follow-Up Sent">📋 Follow-Up Sent</option>
+              <option value="⛔ No Response">⛔ No Response</option>
+            </select>
+            <input id="comm-note" class="sbox" placeholder="Note (e.g. sent intro email, waiting on reply)" style="flex:1;font-size:12px;">
+            <button class="btn bg sm" onclick="addCommLog()">+ Log</button>
+          </div>
+        </div>
+        <div id="comm-log-body" style="max-height:280px;overflow-y:auto;"></div>
+      </div>
+
+      <!-- REVENUE -->
+      <div class="mpanel" id="prof-revenue">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;" class="fg">
+          <div><label>Whitelist Status</label>
+            <select id="rev-whitelist" class="isel" style="width:100%;font-size:13px;padding:6px 10px;" onchange="saveRevenue()">
+              <option value="">Not Started</option><option value="🔄 In Setup">🔄 In Setup</option><option value="✅ Live">✅ Live</option><option value="⏸ Paused">⏸ Paused</option>
+            </select>
+          </div>
+          <div><label>Content Live Date</label><input id="rev-livedate" type="date" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;" onchange="saveRevenue()"></div>
+          <div><label>Revenue Generated (AUD)</label><input id="rev-generated" placeholder="e.g. 12500" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;" oninput="saveRevenue()"></div>
+          <div><label>Total Payout to Influencer</label><input id="rev-payout" placeholder="e.g. 6250" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;" oninput="saveRevenue()"></div>
+          <div><label>Certs Referred</label><input id="rev-certs" placeholder="e.g. 3" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;" oninput="saveRevenue()"></div>
+          <div><label>Commission Rate Applied</label><input id="rev-rate" placeholder="e.g. 50%" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;" oninput="saveRevenue()"></div>
+          <div style="grid-column:1/-1;"><label>Revenue Notes</label><textarea id="rev-notes" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;min-height:60px;resize:vertical;" placeholder="e.g. Whitelist ad started 1 Apr. 3 cert referrals in first 2 weeks." oninput="saveRevenue()"></textarea></div>
+        </div>
+        <div id="rev-summary" style="background:var(--gnd);border:1px solid #2A5A32;border-radius:4px;padding:12px 14px;font-size:12px;color:var(--grn);display:none;"></div>
+      </div>
+
+      <!-- NEXT ACTIONS -->
+      <div class="mpanel" id="prof-actions">
+        <div style="font-size:11px;color:var(--gr);margin-bottom:14px;">Set the single most important next action for this influencer. The outreach agent reads this.</div>
+        <div class="fg">
+          <div style="grid-column:1/-1;"><label>Next Action</label>
+            <select id="act-type" class="isel" style="width:100%;font-size:13px;padding:7px 10px;margin-bottom:10px;" onchange="saveNextAction()">
+              <option value="">Select next action...</option>
+              <option value="📤 Send intro email">📤 Send intro email</option>
+              <option value="📩 Send IG DM">📩 Send IG DM</option>
+              <option value="📋 Send follow-up">📋 Send follow-up</option>
+              <option value="📞 Book a call">📞 Book a call</option>
+              <option value="📄 Send proposal deck">📄 Send proposal deck</option>
+              <option value="🤝 Onboard to whitelist">🤝 Onboard to whitelist</option>
+              <option value="🎙 Book podcast recording">🎙 Book podcast recording</option>
+              <option value="💰 Send payout">💰 Send payout</option>
+              <option value="📊 Review performance">📊 Review performance</option>
+            </select>
+            <label>Due Date</label>
+            <input id="act-date" type="date" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;margin-bottom:10px;" onchange="saveNextAction()">
+            <label>Notes on next action</label>
+            <textarea id="act-notes" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;min-height:70px;resize:vertical;" placeholder="e.g. Christie has agreed to start whitelisting — need to send her the ad account access and brief." oninput="saveNextAction()"></textarea>
+          </div>
+        </div>
+        <div id="act-overdue" style="display:none;margin-top:12px;background:var(--rdd);border:1px solid #5A1A1A;border-radius:4px;padding:10px 14px;font-size:12px;color:#F5A5A0;">⚠️ This action is overdue!</div>
+      </div>
+
+    </div>
+    <div class="mfoot" style="justify-content:space-between;">
+      <button class="btn bd" onclick="oEditI(currentProfileIdx);cM('mo-profile')">✏️ Edit Full Profile</button>
+      <button class="btn bd" onclick="cM('mo-profile')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SEED_INF = [{"handle": "@mmoorefit", "name": "Ollie Moore", "country": "UK / Global", "niche": "Elite Hyrox / Fitness Performance / Online Coaching", "followers": "~100K+", "verified": "✓", "bloodTest": "Ambassador + Cert", "status": "✅ CONFIRMED", "dealType": "Ambassador + Blood Cert + Trainer Resell", "commission": "TBD", "rev1": "50%", "rev2": "20%", "igProfile": "https://www.instagram.com/mmoorefit/", "notes": "MEETING TODAY (Apr 14). Elite Hyrox athlete + online trainer. Interested: (1) Ambassador, (2) Certified blood works person, (3) Sell certification to global trainer following. HIGH VALUE — his audience IS the cert ICP. Fast-track.", "podcastUrl": "", "email": "Moorefitness2022@gmail.com", "phone": "", "website": "linktr.ee/mmoorefit", "contactSource": "website"}, {"handle": "@christiewhitehill", "name": "Christie Whitehill", "country": "Australia", "niche": "Wellness / Skin / Self-Trust / Co-founder Intu Wellness", "followers": "28.4K", "verified": true, "bloodTest": "TBC", "status": "✅ CONFIRMED", "dealType": "Affiliate + Whitelist", "commission": "10%", "rev1": "50%", "rev2": "20%", "igProfile": "https://www.instagram.com/christiewhitehill/", "notes": "Co-Host @inyourskin.podcast. CONFIRMED. Entry: $50–$100 webinar → $25K cert.", "podcastUrl": "https://open.spotify.com/show/0c5UIMkT2LNKfBVZfRY7Hg", "email": "christie@intuwellness.com", "phone": "", "website": "intuwellness.com", "contactSource": "Intu Wellness (co-founder)"}, {"handle": "@nickbellau", "name": "Nick Bell", "country": "Australia", "niche": "Biohacking / Longevity / Entrepreneurship", "followers": "80.3K", "verified": "✓", "bloodTest": "Yes (Everlab)", "status": "🔍 PROSPECT", "dealType": "Paid + Performance", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/nickbellau/", "notes": "AFR Young Rich List. Host @getharderpodcast. 100M+ views. Pitch: paid partnership + Jake on podcast.", "podcastUrl": "https://podcasts.apple.com/au/podcast/get-harder/id1817090659", "email": "info@saxton.com.au", "phone": "1300 799 823", "website": "nick-bell.com", "contactSource": "Saxton Speakers Australia (booking agency)"}, {"handle": "@jonocastanoacero", "name": "Jono Castano", "country": "Australia", "niche": "Fitness / Biohacking / Wellness", "followers": "987K", "verified": true, "bloodTest": "Yes (Everlab)", "status": "🔥 ACTIVE PAID", "dealType": "Paid Influencer (existing)", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/jonocastanoacero/", "notes": "Paid Everlab influencer. Building @acero gym. STEM CELLS highlight. Huge AU + international.", "podcastUrl": "", "email": "james@neonmgmt.com", "phone": "", "website": "acerotrainingseries.com", "contactSource": "management (Neon Mgmt)"}, {"handle": "@tashfriedman", "name": "Natasha Friedman", "country": "Australia", "niche": "Functional Medicine / IV Therapy", "followers": "6.1K", "verified": true, "bloodTest": "TBC", "status": "🎓 IOH Student", "dealType": "IOH Student → Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/tashfriedman/", "notes": "RN + Health Coach. Founder @infinityiv_. IV therapy. Perfect $25K cert ICP.", "podcastUrl": "", "email": "natasha@myfunctionalfill.com", "phone": "", "website": "myfunctionalfill.com", "contactSource": "digital practice"}, {"handle": "@mrtimrobards", "name": "Tim Robards", "country": "Australia", "niche": "Celebrity Fitness / TV / Bachelor AU Host", "followers": "800K+", "verified": true, "bloodTest": "Yes — Paid Partner", "status": "🔥 ACTIVE PAID", "dealType": "Paid Affiliate", "commission": "Code: TIM50", "rev1": "N/A", "rev2": "N/A", "igProfile": "https://www.instagram.com/mrtimrobards/", "notes": "Paid Everlab partner. Full program: bloods, MRI, gut microbiome. Jeremy Cabral + Erin Holland engaged.", "podcastUrl": "", "email": "contact@endorsco.com", "phone": "", "website": "endorsco.com", "contactSource": "management (Endorse Co)"}, {"handle": "@jeremyjcabral", "name": "Jeremy Cabral", "country": "Australia", "niche": "Tech Entrepreneurship / Finder.com.au", "followers": "~25K", "verified": true, "bloodTest": "Yes — Confirmed", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/jeremyjcabral/", "notes": "Founder Finder.com.au. Confirmed Everlab member. High-trust AU biz audience.", "podcastUrl": "", "email": "jeremy@finder.com", "phone": "+61 2 9155 7800", "website": "finder.com.au", "contactSource": "company directory"}, {"handle": "@erinvholland", "name": "Erin Holland", "country": "Australia", "niche": "Model / TV Presenter / Wellness", "followers": "~200K", "verified": true, "bloodTest": "Yes — Confirmed", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/erinvholland/", "notes": "TV presenter. Confirmed Everlab member. Aspirational wellness audience.", "podcastUrl": "", "email": "mb@atarimae.agency", "phone": "", "website": "atarimae.agency", "contactSource": "management (Atarimae Agency)"}, {"handle": "@mark_bouris", "name": "Mark Bouris", "country": "Australia", "niche": "Business / Finance / Podcast Host (Project 100)", "followers": "250K+", "verified": true, "bloodTest": "Podcast Partner", "status": "🔍 PROSPECT", "dealType": "Podcast Guest (Jake) + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/mark_bouris/", "notes": "Project 100 podcast already featured Dr. Steven Lu (Everlab). Warm path for Jake.", "podcastUrl": "https://podcasts.apple.com/au/podcast/project-100-with-mark-bouris/id1589498413", "email": "contact@endorsco.com", "phone": "", "website": "markbouris.com.au", "contactSource": "management (Endorse Co)"}, {"handle": "@drbradburton", "name": "Dr Brad Borton", "country": "Australia", "niche": "Functional Medicine / Men's Health", "followers": "~40K", "verified": "—", "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "", "notes": "AU functional medicine GP. Strong male biohacking audience. Research blood testing content. | ⚠️ Handle unverified — confirm before outreach", "podcastUrl": "", "email": "", "phone": "", "website": "", "contactSource": "not found"}, {"handle": "@laynebuckley", "name": "Layne Buckley", "country": "Australia", "niche": "Wellness / Biohacking / Entrepreneurship", "followers": "~15K", "verified": "—", "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "", "notes": "AU wellness entrepreneur space. Research alignment with blood testing / longevity content. | ⚠️ Handle unverified — confirm before outreach", "podcastUrl": "", "email": "", "phone": "", "website": "", "contactSource": "not found"}, {"handle": "@drgabrielleleone", "name": "Dr Gabrielle Leone", "country": "Australia", "niche": "Functional Medicine / Hormones / Women", "followers": "~30K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "", "notes": "AU integrative GP focused on hormonal health. High-trust women's wellness audience. | ⚠️ Handle unverified — confirm before outreach", "podcastUrl": "", "email": "strong@drgabriellelyon.com", "phone": "", "website": "drgabriellelyon.com", "contactSource": "official website (corrected)"}, {"handle": "@thehealthcode_au", "name": "The Health Code", "country": "Australia", "niche": "Functional Health / Wellness Podcast", "followers": "~10K", "verified": "—", "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Podcast Guest (Jake)", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "", "notes": "AU health podcast. Research for Jake podcast appearance + IOH cert promotion. | ⚠️ Handle unverified — confirm before outreach", "podcastUrl": "", "email": "hello@twopalms.com.au", "phone": "+61 478 536 312", "website": "", "contactSource": "Two Palms Media (Kurt Tilse/Sarah's Day management)"}, {"handle": "@drchatterjee", "name": "Dr Rangan Chatterjee", "country": "UK", "niche": "Functional Medicine / Lifestyle / Podcast", "followers": "1.2M", "verified": true, "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Podcast Guest (Jake) + Paid", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/drchatterjee/", "notes": "Feel Better Live More — ~8M downloads. TOP UK functional medicine voice. Jake pitch: preventative blood testing.", "podcastUrl": "https://drchatterjee.com/podcast", "email": "info@drchatterjee.com", "phone": "", "website": "drchatterjee.com", "contactSource": "official website verified"}, {"handle": "@doctors_kitchen", "name": "Dr Rupy Aujla", "country": "UK", "niche": "Functional Medicine / Nutrition", "followers": "~400K", "verified": "✓", "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/doctors_kitchen/", "notes": "The Doctor's Kitchen — 2M downloads. Nutrition + blood markers angle for Jake.", "podcastUrl": "https://thedoctorskitchen.com/podcasts", "email": "enquiries@bevjames.com", "phone": "", "website": "thedoctorskitchen.com", "contactSource": "Bev James Management (speaking engagements)"}, {"handle": "@angelafosterperformance", "name": "Angela Foster", "country": "UK", "niche": "Biohacking / Women's Health / Performance", "followers": "~120K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/angelafosterperformance/", "notes": "High Performance Health podcast ~500K. Women's blood testing angle for Jake.", "podcastUrl": "https://angelafoster.me/podcast", "email": "angela@angelafosterperformance.com", "phone": "", "website": "angelafosterperformance.com", "contactSource": "official website verified"}, {"handle": "@theoptimalperformance", "name": "Dr Tommy Wood", "country": "UK", "niche": "Neuroscience / Sports Medicine / Biohacking", "followers": "~80K", "verified": "—", "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate + Podcast", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "", "notes": "UK/US neuroscientist. Strong biohacking + blood testing alignment. Research podcast + affiliate angle. | ⚠️ Handle unverified — confirm before outreach", "podcastUrl": "", "email": "", "phone": "1-800-698-2536", "website": "drtommywood.com", "contactSource": "All American Speakers / Performance Insights UK"}, {"handle": "@drandrewsteele", "name": "Dr Andrew Steele", "country": "UK", "niche": "Longevity Science / Anti-Aging Research", "followers": "~30K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate / Guest", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/drandrewsteele/", "notes": "Author 'Ageless'. Cambridge longevity scientist. Podcast guest + UK cert audience.", "podcastUrl": "", "email": "statto@andrewsteele.co.uk", "phone": "", "website": "andrewsteele.co.uk", "contactSource": "LinkedIn / website (rapid reply confirmed)"}, {"handle": "@maxlugavere", "name": "Max Lugavere", "country": "UK/USA", "niche": "Brain Health / Longevity / Nutrition", "followers": "800K+", "verified": true, "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Paid + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/maxlugavere/", "notes": "Genius Foods author. Genius Life podcast. Massive longevity + blood testing alignment. High-value partner.", "podcastUrl": "https://maxlugavere.com/podcast", "email": "contact@maxlugavere.com", "phone": "", "website": "maxlugavere.com", "contactSource": "website / booking agent"}, {"handle": "@simonhillnutrition", "name": "Simon Hill", "country": "UK/AU", "niche": "Plant-Based / Nutrition Science / Longevity", "followers": "~150K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate + Podcast", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/simonhillnutrition/", "notes": "The Proof podcast. Nutrition + blood biomarkers. Academic credibility.", "podcastUrl": "https://theproof.com/podcast", "email": "simon@theproof.com", "phone": "", "website": "theproof.com", "contactSource": "official website verified"}, {"handle": "@bengreenfieldlife", "name": "Ben Greenfield", "country": "USA", "niche": "Biohacking / Longevity / Performance", "followers": "1.1M", "verified": true, "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Paid + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/bengreenfieldlife/", "notes": "Global biohacking authority. Blood testing is core to his content. Top-tier IOH cert credibility.", "podcastUrl": "https://bengreenfieldlife.com/podcast", "email": "ben@bengreenfieldfitness.com", "phone": "1-877-209-9439", "website": "bengreenfieldlife.com", "contactSource": "official website verified"}, {"handle": "@drmarkhyman", "name": "Dr Mark Hyman", "country": "USA", "niche": "Functional Medicine / Blood Testing / Longevity", "followers": "1.9M", "verified": true, "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Paid Partnership", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/drmarkhyman/", "notes": "Functional medicine OG. Deep blood testing content. Would validate IOH globally.", "podcastUrl": "https://drhyman.com/podcast", "email": "support@drhyman.com", "phone": "888-702-2995", "website": "drhyman.com", "contactSource": "official website verified"}, {"handle": "@hubermanlab", "name": "Andrew Huberman", "country": "USA", "niche": "Neuroscience / Longevity / Biohacking", "followers": "5.3M", "verified": true, "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Podcast Guest (Jake)", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/hubermanlab/", "notes": "~20M podcast downloads. Blood biomarkers for brain performance angle. High bar but enormous upside.", "podcastUrl": "https://hubermanlab.com/podcast", "email": "info@hubermanlab.com", "phone": "+1 650-723-2465", "website": "hubermanlab.com", "contactSource": "official website verified"}, {"handle": "@davidsinclairphd", "name": "David Sinclair", "country": "USA", "niche": "Longevity Science / Anti-Aging Research", "followers": "1.1M", "verified": true, "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Paid", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/davidsinclairphd/", "notes": "Harvard longevity professor. Lifespan podcast. Blood biomarkers + longevity cert = perfect fit.", "podcastUrl": "https://lifespanbook.com/podcast", "email": "david_sinclair@hms.harvard.edu", "phone": "", "website": "davidasinclair.com", "contactSource": "Harvard Medical School directory"}, {"handle": "@peterattiamd", "name": "Peter Attia", "country": "USA", "niche": "Longevity / Performance Medicine / Blood Testing", "followers": "~800K", "verified": true, "bloodTest": "Yes (likely)", "status": "🔍 PROSPECT", "dealType": "Podcast Guest (Jake)", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/peterattiamd/", "notes": "The Drive podcast ~3M downloads. Deep blood testing / longevity medicine. Jake's strongest US pitch.", "podcastUrl": "https://peterattiamd.com/podcast", "email": "billing@peterattiamd.com", "phone": "", "website": "peterattiamd.com", "contactSource": "official website"}, {"handle": "@drhyman", "name": "Dr Mark Hyman", "country": "USA", "niche": "Functional Medicine / Ultra Wellness", "followers": "1.9M", "verified": true, "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Paid + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "", "notes": "See @drmarkhyman above — same person.", "podcastUrl": "", "email": "contact@ultrawellnesscenter.com", "phone": "+1 413-637-9991", "website": "ultrawellnesscenter.com", "contactSource": "Ultra Wellness Center"}, {"handle": "@foundmyfitness", "name": "Dr Rhonda Patrick", "country": "USA", "niche": "Nutrition Science / Longevity / Blood Testing", "followers": "~450K", "verified": "✓", "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/foundmyfitness/", "notes": "FoundMyFitness podcast. Micronutrients + blood biomarkers. Academic + practitioner audience.", "podcastUrl": "https://www.foundmyfitness.com/episodes", "email": "", "phone": "1-800-698-2536", "website": "foundmyfitness.com", "contactSource": "AAE Speakers Bureau (use contact form on website)"}, {"handle": "@briandjohnson", "name": "Bryan Johnson", "country": "USA", "niche": "Longevity / Biohacking / Anti-Aging", "followers": "1.2M", "verified": true, "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Paid + Awareness", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/briandjohnson/", "notes": "Blueprint protocol — most tracked blood data in world. Enormous longevity audience. Awareness play.", "podcastUrl": "https://protocol.bryanjohnson.com", "email": "support@bryanjohnson.com", "phone": "", "website": "blueprint.bryanjohnson.com", "contactSource": "official website verified"}, {"handle": "@garyvee", "name": "Gary Vaynerchuk", "country": "USA", "niche": "Entrepreneurship / Mindset / Business", "followers": "10M+", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Paid Awareness", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/garyvee/", "notes": "Mega reach. Not health-specific but recently health-focused. Broader awareness if IOH scales.", "podcastUrl": "", "email": "gary@vaynermedia.com", "phone": "", "website": "garyvaynerchuk.com", "contactSource": "official website + X/Twitter"}, {"handle": "@lewishowes", "name": "Lewis Howes", "country": "USA", "niche": "Mindset / Peak Performance / Health", "followers": "2.1M", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Paid", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/lewishowes/", "notes": "School of Greatness podcast. Performance + health + longevity angle for Jake.", "podcastUrl": "https://lewishowes.com/podcast", "email": "lewis@greatness.com", "phone": "+1 614-350-3960", "website": "lewishowes.com", "contactSource": "official team email (corrected from contact@lewishowes.com)"}, {"handle": "@drmindypelz", "name": "Dr Mindy Pelz", "country": "USA", "niche": "Women's Health / Fasting / Blood Testing", "followers": "~800K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate + Podcast", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/drmindypelz/", "notes": "The Resetter podcast. Strong women's health + blood marker angle. High-converting IOH cert audience.", "podcastUrl": "https://drmindypelz.com/podcast", "email": "info@drmindypelz.com", "phone": "+1 408-298-8092", "website": "drmindypelz.com", "contactSource": "official website verified"}, {"handle": "@jimkwik", "name": "Jim Kwik", "country": "USA", "niche": "Brain Performance / Learning / Biohacking", "followers": "4.2M", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Paid Awareness", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/jimkwik/", "notes": "Brain coaching. Not pure blood testing but performance optimisation. Large engaged audience.", "podcastUrl": "https://kwikbrain.com", "email": "contact@jimkwik.com", "phone": "", "website": "jimkwik.com", "contactSource": "official website verified"}, {"handle": "@a.glimpse.of.amelia", "name": "Amelia (A Glimpse of Amelia)", "country": "Australia", "niche": "Wellness / Healthy Lifestyle / Skin", "followers": "38K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/a.glimpse.of.amelia/", "podcastUrl": "", "notes": "AU wellness lifestyle creator. Skin and healthy living content. Growing audience.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "Amelia@agoa.com.au", "phone": "", "website": "agoa.com.au", "contactSource": "official website verified"}, {"handle": "@garybrecka", "name": "Gary Brecka", "country": "USA", "niche": "Biohacking / Human Biology / Blood Testing / Longevity", "followers": "3M", "verified": true, "bloodTest": "Yes — core to brand", "status": "🔍 PROSPECT", "dealType": "Paid + Podcast Guest", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/garybrecka/", "podcastUrl": "https://www.theultimatehuman.com/gary-brecka", "notes": "Human biologist, co-founder 10X Health. Blood testing is central to his methodology. TOP US target.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "contact@theultimatehuman.com", "phone": "+1 239-325-9645", "website": "theultimatehuman.com", "contactSource": "The Ultimate Human website"}, {"handle": "@dave.asprey", "name": "Dave Asprey", "country": "USA", "niche": "Biohacking / Human Optimization / Bulletproof", "followers": "1.1M", "verified": true, "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Paid", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/dave.asprey/", "podcastUrl": "https://daveasprey.com/category/podcasts/", "notes": "Founder of biohacking movement. Bulletproof Diet creator. The Human Upgrade podcast. Pioneer-level credibility.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "david@asprey.net", "phone": "+1 408-887-1505", "website": "daveasprey.com", "contactSource": "official website verified"}, {"handle": "@cbum", "name": "Chris Bumstead", "country": "Canada", "niche": "Bodybuilding / Fitness / Physical Performance", "followers": "26M", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Paid Awareness", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/cbum/", "podcastUrl": "", "notes": "6x Mr Olympia Classic Physique champion. Enormous global fitness audience. Awareness/brand play if IOH scales.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "christopher.bumstead@gmail.com", "phone": "", "website": "cbumfitness.com", "contactSource": "ContactOut / MN2S booking agency"}, {"handle": "@dr.amybkillen", "name": "Dr Amy Killen", "country": "USA", "niche": "Regenerative Medicine / Anti-Aging / Women's Hormones / Longevity", "followers": "199K", "verified": false, "bloodTest": "Yes — speciality", "status": "🔍 PROSPECT", "dealType": "Affiliate + Podcast Guest", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/dr.amybkillen/", "podcastUrl": "", "notes": "MD specialising in hormone therapy and regenerative medicine. Co-founder Humanaut Health. Perfect IOH cert audience.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "amybkillen@gmail.com", "phone": "", "website": "dramykillen.com", "contactSource": "online sources"}, {"handle": "@nathalieniddam", "name": "Nathalie Niddam", "country": "Canada", "niche": "Longevity Biohacking / Peptides / Epigenetics", "followers": "87K", "verified": true, "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Affiliate + Podcast Guest", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/nathalieniddam/", "podcastUrl": "https://castbox.fm/channel/LONGEVITY-with-Nathalie-Niddam-id6819590", "notes": "Longevity biohacker, peptide expert, epigenetic coach. LONGEVITY podcast. High-alignment audience.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "nathalie@nathalieniddam.com", "phone": "+1 929-589-1440", "website": "natniddam.com", "contactSource": "website"}, {"handle": "@steven", "name": "Steven Bartlett", "country": "UK", "niche": "Entrepreneurship / Personal Development / Health", "followers": "5M", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Podcast Guest (Jake)", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/steven/", "podcastUrl": "https://open.spotify.com/show/8Pb6f7S8JU3VCl8YF6iKVk", "notes": "Diary of a CEO — 10M+ downloads. Massive high-performer audience. Transformative if Jake gets on this show.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "commercial@stevenbartlett.com", "phone": "", "website": "stevenbartlett.com", "contactSource": "official website + LinkedIn verified"}, {"handle": "@melrobbins", "name": "Mel Robbins", "country": "USA", "niche": "Motivation / Behavior Change / Mindset", "followers": "12M", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Paid", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/melrobbins/", "podcastUrl": "https://www.melrobbins.com/podcast", "notes": "The Mel Robbins Podcast — massive self-optimisation audience. Health angle for Jake: the biology behind behaviour change.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "hello@melrobbins.com", "phone": "+1 855-827-9635", "website": "melrobbins.com", "contactSource": "official website verified"}, {"handle": "@lowtoxlife", "name": "Alexx Stuart", "country": "Australia", "niche": "Low Tox Living / Environmental Health / Wellness Education", "followers": "67K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate + Podcast Guest", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/lowtoxlife/", "podcastUrl": "https://www.lowtoxlife.com/podcast", "notes": "Pioneer of AU low-tox movement. Low Tox Life podcast. Practitioner-adjacent audience. Good IOH cert lead source.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "hello@lowtoxlife.com", "phone": "", "website": "lowtoxlife.com", "contactSource": "official contact page (corrected from contact@)"}, {"handle": "@drkarafitzgerald", "name": "Dr Kara Fitzgerald", "country": "USA", "niche": "Functional Medicine / Longevity / Epigenetics / Biological Age Reversal", "followers": "136K", "verified": true, "bloodTest": "Yes — research focus", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/drkarafitzgerald/", "podcastUrl": "https://podcasts.apple.com/us/podcast/dr-kara-fitzgerald-new-frontiers-in-functional-medicine/id1103271110", "notes": "IFM-certified MD. Leading researcher on epigenetics and biological age reversal. New Frontiers in Functional Medicine podcast. Top cert credibility.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "frontdesk@drkarafitzgerald.com", "phone": "+1 203-304-9502", "website": "drkarafitzgerald.com", "contactSource": "clinic contact page verified"}, {"handle": "@d_alec_zeck", "name": "Alec Zeck", "country": "USA", "niche": "Health Freedom / Holistic Health / Mind-Body Wellness", "followers": "178K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/d_alec_zeck/", "podcastUrl": "https://www.thewayfwrd.com/", "notes": "Health freedom advocate. The Way Forward podcast. Engaged wellness audience interested in taking health into own hands.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "hello@thewayfwrd.com", "phone": "", "website": "thewayfwrd.com", "contactSource": "official website verified"}, {"handle": "@bernadette.abraham", "name": "Bernadette Abraham", "country": "USA", "niche": "Functional Medicine Nutrition / Holistic Health Coaching", "followers": "85K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/bernadette.abraham/", "podcastUrl": "", "notes": "Functional medicine health coach, author of UNJUNK. Practical nutrition education. Good cert audience overlap.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "Bernadette@BernadetteAbraham.com", "phone": "", "website": "bernadetteabraham.com", "contactSource": "official website verified"}, {"handle": "@pjharlowwellness", "name": "PJ Harlow", "country": "USA", "niche": "Environmental Health / Mold Toxicity / Functional Health", "followers": "81K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/pjharlowwellness/", "podcastUrl": "", "notes": "Certified holistic practitioner specialising in mold illness and environmental toxicity. Practitioner-adjacent audience.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "pjharlowwellness@gmail.com", "phone": "+1 302-236-5509", "website": "pjharlowwellness.com", "contactSource": "official website verified"}, {"handle": "@dr.jess.md", "name": "Dr Jessica Peatross", "country": "USA", "niche": "Functional Medicine / Root Cause Medicine / Holistic Health", "followers": "445K", "verified": true, "bloodTest": "Yes", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/dr.jess.md/", "podcastUrl": "https://wellnessplus.com/", "notes": "MD turned holistic health practitioner. WellnessPlus platform. Bridges science with natural health. High-trust audience.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "support@drjessmd.com", "phone": "", "website": "drjessmd.com", "contactSource": "official website verified"}, {"handle": "@healingcavelady", "name": "Mary Darnall", "country": "USA", "niche": "Nutritional Therapy / Biohacking / Health Optimisation", "followers": "263K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/healingcavelady/", "podcastUrl": "", "notes": "Certified Nutritional Therapy Practitioner. Known for honest supplement and health device reviews. Engaged biohacking audience.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "healingcavelady@gmail.com", "phone": "", "website": "healingcavelady.com", "contactSource": "official website verified"}, {"handle": "@drjeffreybland", "name": "Dr Jeffrey Bland", "country": "USA", "niche": "Functional Medicine / Systems Biology / Longevity", "followers": "52K", "verified": true, "bloodTest": "Yes — founder", "status": "🔍 PROSPECT", "dealType": "Affiliate + Podcast Guest", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/drjeffreybland/", "podcastUrl": "", "notes": "Founder of functional medicine movement and IFM. Pioneer in systems-biology-based healthcare. Maximum practitioner credibility.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "jeffbland@bigboldhealth.com", "phone": "+1 206-201-3794", "website": "bigboldhealth.com", "contactSource": "official website (corrected from trisheury@)"}, {"handle": "@dr.williamwallace", "name": "Dr William Wallace", "country": "USA", "niche": "Nutritional Biochemistry / Supplements / Human Performance", "followers": "344K", "verified": "✓", "bloodTest": "Yes", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/dr.williamwallace/", "podcastUrl": "", "notes": "PhD Nutritional Sciences. Expert on nutrient biochemistry and supplementation science. Daily Value podcast.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "", "phone": "", "website": "drwilliamwallace.com", "contactSource": "Instagram DM @dr.williamwallace (no public email)"}, {"handle": "@tonymcaleavey", "name": "Tony McAleavey", "country": "UK", "niche": "Fitness Coaching / Health Transformation", "followers": "1M", "verified": "✓", "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Paid Awareness", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/tonymcaleavey/", "podcastUrl": "", "notes": "Ex-firefighter turned viral fitness coach. 1M engaged followers. High-performer transformation audience.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "", "phone": "", "website": "tonymcaleaveyfitness.com", "contactSource": "Instagram DM @tonymcaleavey (company dissolved 2024)"}, {"handle": "@hattieboydle", "name": "Hattie Boydle", "country": "Australia", "niche": "Fitness / Bodybuilding / Women's Health / Body Composition", "followers": "594K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate + Paid", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/hattieboydle/", "podcastUrl": "", "notes": "WBFF Pro champion. AU fitness icon. Coaches women on strength and nutrition. Large engaged AU + global audience.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "Hattieboydlept@gmail.com", "phone": "+61 2 418 406 955", "website": "hattieboydle.com.au", "contactSource": "official website verified"}, {"handle": "@itscoachgoodman", "name": "Jonathan Goodman", "country": "Canada", "niche": "Fitness Coaching / Personal Training Education / Health Entrepreneurship", "followers": "252K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/itscoachgoodman/", "podcastUrl": "", "notes": "Founder of Personal Trainer Development Center. Trains coaches on business and fitness. Relevant for cert-track practitioners.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "Jonathan@theptdc.com", "phone": "", "website": "jonathangoodman.com", "contactSource": "PTDC website verified"}, {"handle": "@drjohnberardi", "name": "Dr John Berardi", "country": "Canada", "niche": "Nutrition Science / Precision Nutrition / Health Coaching", "followers": "51K", "verified": true, "bloodTest": "Yes", "status": "🔍 PROSPECT", "dealType": "Affiliate + Podcast Guest", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/drjohnberardi/", "podcastUrl": "https://www.precisionnutrition.com/podcast", "notes": "PhD Nutritional Biochemistry, co-founder Precision Nutrition. Evidence-based nutrition education. Perfect cert audience.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "info@precisionnutrition.com", "phone": "1-877-660-6464", "website": "precisionnutrition.com", "contactSource": "Precision Nutrition company contact"}, {"handle": "@sarahkleinerwellness", "name": "Sarah Kleiner", "country": "USA", "niche": "Circadian Biology / Quantum Health / Mitochondrial Health", "followers": "227K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate + Podcast Guest", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/sarahkleinerwellness/", "podcastUrl": "https://podcasts.apple.com/us/podcast/evolving-wellness-podcast-with-sarah-kleiner-wellness/id1540699370", "notes": "Quantum biology and circadian health coach. The Evolving Wellness Podcast. Advanced metabolic health concepts.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "sarah@sarahkleinerwellness.com", "phone": "", "website": "sarahkleinerwellness.com", "contactSource": "website verified"}, {"handle": "@doc_amen", "name": "Dr Daniel Amen", "country": "USA", "niche": "Brain Health / Cognitive Function / Mental Wellness / Neuroimaging", "followers": "4M", "verified": true, "bloodTest": "Yes", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Paid", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/doc_amen/", "podcastUrl": "https://www.amenclinics.com/podcast/", "notes": "Psychiatrist, 300K+ brain scans. Pioneer of brain-based health. Amen Clinics. Enormous credibility for IOH global expansion.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "nbuchoz@amenclinic.com", "phone": "+1 855-421-5425", "website": "danielamenmd.com", "contactSource": "Amen Clinics management verified"}, {"handle": "@paulsaladinomd", "name": "Dr Paul Saladino", "country": "USA", "niche": "Nutrition / Carnivore Diet / Metabolic Health", "followers": "2.8M", "verified": true, "bloodTest": "Yes", "status": "🔍 PROSPECT", "dealType": "Paid + Podcast Guest", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/paulsaladinomd/", "podcastUrl": "", "notes": "Former psychiatrist, Carnivore MD. 2.8M following. Large nutrition-focused audience interested in metabolic optimisation.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "info@paulsaladinomd.co", "phone": "", "website": "paulsaladinomd.com", "contactSource": "official website verified"}, {"handle": "@kashkhanofficial", "name": "Kashif Khan", "country": "Canada", "niche": "Genomics / DNA-Based Biohacking / Longevity / Personalised Health", "followers": "1M", "verified": true, "bloodTest": "Yes — DNA focus", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/kashkhanofficial/", "podcastUrl": "https://www.thedonacompany.com/podcast", "notes": "CEO of The DNA Company. The DNA Way (bestseller). Genomic interpretation for personalised longevity. Perfect IOH alignment.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "kashif@thednacompany.com", "phone": "+1 416-622-6800", "website": "kashkhanofficial.com", "contactSource": "DNA Company verified"}, {"handle": "@bengreenfieldfitness", "name": "Ben Greenfield (Fitness)", "country": "USA", "niche": "Biohacking / Longevity / Human Performance / Functional Fitness", "followers": "456K", "verified": true, "bloodTest": "Likely", "status": "🔍 PROSPECT", "dealType": "Paid + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/bengreenfieldfitness/", "podcastUrl": "https://bengreenfieldlife.com/podcast", "notes": "Secondary Ben Greenfield handle (@bengreenfieldlife also in tracker). Same person — coordinate outreach.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "support@bengreenfieldlife.com", "phone": "1-877-209-9439", "website": "bengreenfieldlife.com", "contactSource": "website verified"}, {"handle": "@biological_dentist", "name": "Dr Seb (Biological Dentist)", "country": "UK / Europe", "niche": "Biological / Holistic Dentistry / Airway Health", "followers": "293K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/biological_dentist/", "podcastUrl": "", "notes": "Biochemist + biological dentist. Oral-systemic health connection. Growing niche aligned with functional medicine practitioners.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "reception@wonderofwellness.clinic", "phone": "", "website": "wonderofwellness.co.uk", "contactSource": "Wonder of Wellness clinic website"}, {"handle": "@denny_dure", "name": "Denny Dure", "country": "USA", "niche": "Holistic Health / Natural Healing / Health Optimisation", "followers": "822K", "verified": "✓", "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/denny_dure/", "podcastUrl": "", "notes": "Holistic health educator. Large engaged audience interested in natural health optimisation. Good cert awareness play.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "", "phone": "", "website": "pillar.io/denny_dure", "contactSource": "Instagram DM @denny_dure only (DM 'DURE')"}, {"handle": "@drpompa", "name": "Dr Daniel Pompa", "country": "USA", "niche": "Cellular Detoxification / Cellular Healing / Nutrition", "followers": "50K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate + Podcast Guest", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/drpompa/", "podcastUrl": "https://pompaprogram.com/podcast/", "notes": "Chiropractor, author of True Cellular Detox. The Pompa Program podcast. Focused on root-cause cellular healing.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "info@pompaprogram.com", "phone": "1-800-691-7422", "website": "pompaprogram.com", "contactSource": "official website verified"}, {"handle": "@dr.carriejones", "name": "Dr Carrie Jones", "country": "USA", "niche": "Women's Hormones / Functional Medicine / Metabolic Health", "followers": "242K", "verified": true, "bloodTest": "Yes — specialty", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/dr.carriejones/", "podcastUrl": "https://podcasts.apple.com/us/podcast/hello-hormones-with-dr-carrie-jones/id1813934931", "notes": "ND specialising in women's hormones. Hello Hormones podcast. Board-certified naturopathic endocrinology. Perfect cert ICP.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "hello@drcarriejones.com", "phone": "", "website": "drcarriejones.com", "contactSource": "website verified"}, {"handle": "@drmercola", "name": "Dr Joseph Mercola", "country": "USA", "niche": "Alternative Health / Natural Wellness / Supplementation", "followers": "531K", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/drmercola/", "podcastUrl": "", "notes": "Large wellness platform. NOTE: Controversial — documented misinformation history. Consider carefully before outreach.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "editor@mercola.com", "phone": "1-877-985-2695", "website": "mercola.com", "contactSource": "official website verified"}, {"handle": "@timferriss", "name": "Tim Ferriss", "country": "USA", "niche": "Biohacking / Human Optimisation / Performance / Personal Development", "followers": "2M", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Podcast Guest (Jake)", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/timferriss/", "podcastUrl": "https://tim.blog/podcast/", "notes": "The Tim Ferriss Show — one of the most downloaded podcasts globally. Biohacking pioneer, 4-Hour Work Week author. High bar but enormous reach.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "speakers@caa.com", "phone": "+1 424-288-2898", "website": "tim.blog", "contactSource": "CAA management (verified)"}, {"handle": "@drjockers", "name": "Dr David Jockers", "country": "USA", "niche": "Functional Nutrition / Detoxification / Brain Health / Fasting", "followers": "344K", "verified": true, "bloodTest": "Yes", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/drjockers/", "podcastUrl": "https://open.spotify.com/show/5l0LkYqW29ksV9Ut3hPuto", "notes": "Doctor of Natural Medicine. Dr Jockers Functional Nutrition Podcast — top-ranked. Evidence-based practitioner education.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "sales@drjockers.com", "phone": "+1 678-884-3561", "website": "drjockers.com", "contactSource": "official website verified"}, {"handle": "@thomasdelauer", "name": "Thomas DeLauer", "country": "USA", "niche": "Nutrition / Intermittent Fasting / Ketogenic Diet / Body Optimisation", "followers": "3.98M", "verified": true, "bloodTest": "TBC", "status": "🔍 PROSPECT", "dealType": "Paid + Affiliate", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/thomasdelauer/", "podcastUrl": "", "notes": "4M YouTube subscribers. Massive nutrition-focused audience. Fasting and metabolic optimisation core content.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "thomas.delauer@gmail.com", "phone": "+1 512-671-0110", "website": "thomasdelauer.com", "contactSource": "website verified"}, {"handle": "@kaylabarnes", "name": "Kayla Barnes-Lentz", "country": "USA", "niche": "Female Longevity / Biohacking / Hormone Health / Cycle Syncing", "followers": "627K", "verified": true, "bloodTest": "Yes — deep focus", "status": "🔍 PROSPECT", "dealType": "Paid + Podcast Guest", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/kaylabarnes/", "podcastUrl": "https://podcasts.apple.com/us/podcast/longevity-optimization-with-kayla-barnes-lentz/id1591130227", "notes": "Leading female longevity expert. Longevity Optimization podcast. Blood testing and biomarkers central to her content.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "info@kaylabarnes.com", "phone": "+1 646-628-2009", "website": "kaylabarnes.com", "contactSource": "website verified"}, {"handle": "@drgabriellelyon", "name": "Dr Gabrielle Lyon", "country": "USA", "niche": "Muscle-Centric Medicine / Metabolic Health / Longevity / Protein Science", "followers": "1M", "verified": true, "bloodTest": "Yes", "status": "🔍 PROSPECT", "dealType": "Podcast Guest + Paid", "commission": "TBD", "rev1": "TBD", "rev2": "TBD", "igProfile": "https://www.instagram.com/drgabriellelyon/", "podcastUrl": "https://drgabriellelyon.com/podcast/", "notes": "Board-certified MD, NYT bestselling author. Muscle-Centric Medicine pioneer. 1M IG. Perfect IOH performance-longevity angle.", "hook": "", "angles": "", "cta": "", "know": "", "personal": "", "prior": "", "temp": "cold", "email": "strong@drgabriellelyon.com", "phone": "", "website": "drgabriellelyon.com", "contactSource": "website verified"}];
+const SEED_POD = [{"showName": "Get Harder Podcast", "host": "Nick Bell", "country": "Australia", "audienceSize": "250K+ downloads", "nicheFit": "Biohacking / Longevity / Entrepreneurship", "episodeAngle": "Blood biomarkers as performance leverage — energy, cognition and longevity", "contact": "@nickbellau", "status": "📬 Outreach Needed", "priority": "🔥 HIGH", "notes": "Nick does Everlab. Natural intro. Could double as partnership activation.", "email": "", "phone": "", "website": "nick-bell.com", "bookingUrl": "", "contactSource": "check nick-bell.com / Saxton Speakers"}, {"showName": "Project 100", "host": "Mark Bouris", "country": "Australia", "audienceSize": "50K+ listeners", "nicheFit": "Longevity / Business / Health", "episodeAngle": "IOH blood certification: giving practitioners the tools to lead Australia's longevity revolution", "contact": "@mark_bouris", "status": "📬 Outreach Needed", "priority": "🔥 HIGH", "notes": "Dr. Steven Lu (Everlab) already appeared. Warm path. Top AU priority.", "email": "", "phone": "", "website": "mentored.com.au/project-100", "bookingUrl": "mentored.com.au", "contactSource": "Mentored platform"}, {"showName": "In Your Skin Podcast", "host": "Christie Whitehill", "country": "Australia", "audienceSize": "30K–50K", "nicheFit": "Wellness / Skin / Self-Trust", "episodeAngle": "What blood results reveal about skin, hormones and confidence", "contact": "@christiewhitehill", "status": "📬 Outreach Needed", "priority": "🔥 HIGH", "notes": "Christie is IOH affiliate. Natural collab — record ep + use as whitelist content.", "email": "hello@intuwellness.com", "phone": "", "website": "intuwellness.com", "bookingUrl": "intuwellness.com/contact-us", "contactSource": "INTU Wellness contact page"}, {"showName": "The House of Wellness", "host": "Channel 7", "country": "Australia", "audienceSize": "1M+ (TV + pod)", "nicheFit": "Mainstream Wellness / Health", "episodeAngle": "The blood test your doctor doesn't order — and why it could save your life", "contact": "@wellnessaustralia", "status": "📬 Outreach Needed", "priority": "🔥 HIGH", "notes": "Channel 7 mainstream show. Huge AU reach. Jake as expert on blood testing.", "email": "", "phone": "0428 275 111", "website": "2gb.com/show/the-house-of-wellness", "bookingUrl": "", "contactSource": "Channel 7 / 2GB media contact"}, {"showName": "Jono Castano Podcast", "host": "Jono Castano", "country": "Australia", "audienceSize": "500K+ reach", "nicheFit": "Fitness / Biohacking", "episodeAngle": "Stem cells + blood testing: the elite health stack top performers are using", "contact": "@jonocastanoacero", "status": "📬 Outreach Needed", "priority": "🔥 HIGH", "notes": "Paid Everlab influencer. Low friction outreach. Massive AU + international.", "email": "", "phone": "", "website": "open.spotify.com/show/1KJbIcoX0fYxQ0dTY9tZu5", "bookingUrl": "", "contactSource": "Instagram @nobusinessbeingacastano"}, {"showName": "For Health's Sake", "host": "Yianna Velos", "country": "Australia", "audienceSize": "Small / growing", "nicheFit": "Health / Longevity / Wellness", "episodeAngle": "The future of preventative health — blood testing as the foundation of personalised medicine", "contact": "@forhealths_sakepodcast", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "Everlab-adjacent. Niche-perfect for Jake's authority building in AU.", "email": "", "phone": "+1 416-551-7100", "website": "for-healths-sake.janeapp.com", "bookingUrl": "", "contactSource": "clinic contact"}, {"showName": "Agency Podcast", "host": "AU Host", "country": "Australia", "audienceSize": "20K followers", "nicheFit": "High Performance / Mindset", "episodeAngle": "The biomarkers behind high performance: what blood data reveals about elite operators", "contact": "@agencypodcast_", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "Christie follows this. Warm intro available. High-performer audience.", "email": "", "phone": "+61 2 9332 9111", "website": "rivyl.com", "bookingUrl": "l.rivyl.com/JUPbkj", "contactSource": "Rivyl agency (Dain Walker)"}, {"showName": "The Health Hacker", "host": "AU Host", "country": "Australia", "audienceSize": "~50K", "nicheFit": "Functional Health / Biohacking", "episodeAngle": "Hacking your blood: the advanced testing protocol that goes beyond your GP", "contact": "Research", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "AU biohacking space. Research show and host — confirm details.", "email": "nick@thefordhamcompany.com.au", "phone": "+61 2 9332 9111", "website": "podcastoneaustralia.com.au", "bookingUrl": "", "contactSource": "The Fordham Company (exclusive management)"}, {"showName": "Feel Better Live More", "host": "Dr Rangan Chatterjee", "country": "UK", "audienceSize": "~8M downloads", "nicheFit": "Functional Medicine / Lifestyle", "episodeAngle": "Why preventative blood testing is the future of medicine — and how practitioners can lead it", "contact": "@drchatterjee", "status": "📬 Outreach Needed", "priority": "🔥 HIGH", "notes": "UK's biggest functional medicine podcast. Strong alignment. Top UK priority.", "email": "info@drchatterjee.com", "phone": "", "website": "drchatterjee.com", "bookingUrl": "drchatterjee.com/contact", "contactSource": "official website verified"}, {"showName": "The Doctor's Kitchen Podcast", "host": "Dr Rupy Aujla", "country": "UK", "audienceSize": "~2M downloads", "nicheFit": "Functional Medicine / Nutrition", "episodeAngle": "What nutrition does to your blood markers: a functional medicine deep dive", "contact": "@doctors_kitchen", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "Strong UK functional medicine audience. Good for IOH cert angle.", "email": "", "phone": "", "website": "thedoctorskitchen.com", "bookingUrl": "thedoctorskitchen.com/contact", "contactSource": "website contact form"}, {"showName": "High Performance Health", "host": "Angela Foster", "country": "UK", "audienceSize": "~500K downloads", "nicheFit": "Biohacking / Women's Health", "episodeAngle": "Blood testing for women: the biomarkers every high-performing woman should know", "contact": "@angelafosterperformance", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "UK women's health/biohacking niche. Good for female IOH student acquisition.", "email": "angela@angelafosterperformance.com", "phone": "", "website": "angelafosterperformance.com", "bookingUrl": "angelafosterperformance.com/podcasts", "contactSource": "official website"}, {"showName": "The Proof Podcast", "host": "Simon Hill", "country": "UK/AU", "audienceSize": "~300K downloads", "nicheFit": "Nutrition Science / Longevity", "episodeAngle": "Blood biomarkers and nutrition: what the science says about optimising your panels", "contact": "@simonhillnutrition", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "Evidence-based nutrition audience. Jake's clinical credibility plays well here.", "email": "partnerships@voicingchange.media", "phone": "", "website": "theproof.com", "bookingUrl": "theproof.com/contact", "contactSource": "Voicing Change Media (PR partner)"}, {"showName": "The Longevity & Lifestyle", "host": "Claudia von Boeselager", "country": "Germany/Global", "audienceSize": "~200K", "nicheFit": "Longevity / Anti-Aging", "episodeAngle": "The blood certification revolution: training health practitioners in longevity medicine", "contact": "@longevityandlifestyle", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "European longevity niche. Good for international IOH cert visibility.", "email": "", "phone": "", "website": "longevity-and-lifestyle.com", "bookingUrl": "longevity-and-lifestyle.com", "contactSource": "website / Instagram @longevityandlifestyle"}, {"showName": "Ben Greenfield Fitness", "host": "Ben Greenfield", "country": "USA", "audienceSize": "~3M downloads", "nicheFit": "Biohacking / Longevity / Blood Testing", "episodeAngle": "Advanced blood panels — what's beyond standard labs and how to interpret them for longevity", "contact": "@bengreenfieldlife", "status": "📬 Outreach Needed", "priority": "🔥 HIGH", "notes": "THE biohacking podcast. Blood testing is core content. Strong pitch opportunity.", "email": "support@bengreenfieldlife.com", "phone": "1-877-209-9439", "website": "bengreenfieldlife.com", "bookingUrl": "bengreenfieldlife.com/interview-page-for-ben-greenfield-fitness-podcast-please-accept-the-terms-conditions", "contactSource": "official website interview page"}, {"showName": "The Drive Podcast", "host": "Peter Attia", "country": "USA", "audienceSize": "~3M downloads", "nicheFit": "Longevity / Performance Medicine", "episodeAngle": "Functional blood analysis: why standard lab ranges are failing patients and what to do instead", "contact": "@peterattiamd", "status": "📬 Outreach Needed", "priority": "🔥 HIGH", "notes": "Deep science audience. Jake must have strong data. Longest lead time but highest credibility.", "email": "", "phone": "", "website": "peterattiamd.com", "bookingUrl": "peterattiamd.com/contact", "contactSource": "website contact form (100M+ downloads)"}, {"showName": "Huberman Lab", "host": "Andrew Huberman", "country": "USA", "audienceSize": "~20M downloads", "nicheFit": "Neuroscience / Longevity / Biohacking", "episodeAngle": "Blood-based biomarkers for brain performance, stress resilience and longevity", "contact": "@hubermanlab", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "Top-tier show. High bar. Jake needs strong research-backed angle.", "email": "", "phone": "", "website": "hubermanlab.com", "bookingUrl": "hubermanlab.com/faq/can-i-suggest-guests-for-the-huberman-lab-podcast", "contactSource": "guest submission form ONLY — do not email"}, {"showName": "FoundMyFitness Podcast", "host": "Dr Rhonda Patrick", "country": "USA", "audienceSize": "~1M downloads", "nicheFit": "Nutrition Science / Blood Testing", "episodeAngle": "Micronutrient blood testing: what functional panels reveal that standard tests miss", "contact": "@foundmyfitness", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "Academic + practitioner audience. Blood testing core to her brand. Strong alignment.", "email": "", "phone": "", "website": "foundmyfitness.com", "bookingUrl": "foundmyfitness.com/contact", "contactSource": "website contact form"}, {"showName": "The School of Greatness", "host": "Lewis Howes", "country": "USA", "audienceSize": "~10M downloads", "nicheFit": "Performance / Health / Mindset", "episodeAngle": "The blood test that reveals everything about your energy, hormones and longevity", "contact": "@lewishowes", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "Broad high-performance audience. Good for mainstream IOH cert awareness.", "email": "lewis@greatness.com", "phone": "+1 614-350-3960", "website": "lewishowes.com", "bookingUrl": "lewishowes.com/contact", "contactSource": "official email verified"}, {"showName": "The Diary of a CEO", "host": "Steven Bartlett", "country": "UK/Global", "audienceSize": "~10M+ downloads", "nicheFit": "Entrepreneurship / Health / Performance", "episodeAngle": "The silent health crisis in high-performers: blood markers predict burnout, longevity and peak output", "contact": "@stevenbartlett", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "Huge global reach. Harder pitch but enormous upside. Frame around CEOs and performance.", "email": "bookings@stevenbartlett.com", "phone": "", "website": "stevenbartlett.com/doac", "bookingUrl": "stevenbartlett.com/enquiries", "contactSource": "official enquiries page (PR & Podcast)"}, {"showName": "Genius Life Podcast", "host": "Max Lugavere", "country": "USA/UK", "audienceSize": "~500K downloads", "nicheFit": "Brain Health / Nutrition / Longevity", "episodeAngle": "Blood biomarkers for brain health: what to look for beyond standard tests", "contact": "@maxlugavere", "status": "📬 Outreach Needed", "priority": "⚡ MED", "notes": "Genius Foods author. Strong blood + nutrition + longevity angle. Academic credibility.", "email": "info@maxlugavere.com", "phone": "", "website": "maxlugavere.com", "bookingUrl": "maxlugavere.com/contact", "contactSource": "official website (80M+ downloads)"}, {"showName": "Align Podcast", "host": "Aaron Alexander", "country": "USA", "audienceSize": "~500K downloads", "nicheFit": "Movement / Biohacking / Holistic Health", "episodeAngle": "Biometrics and movement: using blood data to optimise your physical practice", "contact": "@alignpodcast", "status": "📬 Outreach Needed", "priority": "📌 LOW", "notes": "US biohacking/movement audience. Secondary priority.", "email": "", "phone": "", "website": "alignpodcast.com", "bookingUrl": "alignpodcast.com/contact", "contactSource": "use Podcast Inquiry form on contact page"}, {"showName": "Wellness Mama Podcast", "host": "Katie Wells", "country": "USA", "audienceSize": "~2M downloads", "nicheFit": "Women's Wellness / Holistic Health", "episodeAngle": "Blood testing for mums: the markers that affect energy, mood, hormones and weight", "contact": "@wellnessmama", "status": "📬 Outreach Needed", "priority": "📌 LOW", "notes": "Large women's wellness audience. Good for female practitioner certification angle.", "email": "", "phone": "", "website": "wellnessmama.com", "bookingUrl": "wellnessmama.com/contact", "contactSource": "by invitation only — 3+ months advance"}];
+const LS_I='ioh_i_v6',LS_P='ioh_p_v6';
+let INF=JSON.parse(localStorage.getItem(LS_I)||'null')||JSON.parse(JSON.stringify(SEED_INF));
+let POD=JSON.parse(localStorage.getItem(LS_P)||'null')||JSON.parse(JSON.stringify(SEED_POD));
+let eI=null,eP=null,sI={k:'country',d:1},sP={k:'priority',d:1};
+INF.forEach(function(r){if(!r.hook)r.hook='';if(!r.angles)r.angles='';if(!r.cta)r.cta='';if(!r.know)r.know='';if(!r.personal)r.personal='';if(!r.prior)r.prior='';if(!r.temp)r.temp='cold';});
+POD.forEach(function(r){if(!r.hook)r.hook='';if(!r.points)r.points='';if(!r.know)r.know='';if(!r.prior2)r.prior2='';if(!r.temp)r.temp='cold';});
+function sv(){localStorage.setItem(LS_I,JSON.stringify(INF));localStorage.setItem(LS_P,JSON.stringify(POD));}
+// ── CONTACT SYNC (merges researched contacts into live localStorage data) ─────
+var LS_CSYNC='ioh_contacts_synced_v2';
+var CONTACT_LOOKUP=[{"handle": "mmoorefit", "name": "Ollie Moore", "email": "Moorefitness2022@gmail.com", "phone": "", "website": "linktr.ee/mmoorefit", "contactSource": "website"}, {"handle": "christiewhitehill", "name": "Christie Whitehill", "email": "christie@intuwellness.com", "phone": "", "website": "intuwellness.com", "contactSource": "Intu Wellness (co-founder)"}, {"handle": "nickbellau", "name": "Nick Bell", "email": "info@saxton.com.au", "phone": "1300 799 823", "website": "nick-bell.com", "contactSource": "Saxton Speakers Australia (booking agency)"}, {"handle": "jonocastanoacero", "name": "Jono Castano", "email": "james@neonmgmt.com", "phone": "", "website": "acerotrainingseries.com", "contactSource": "management (Neon Mgmt)"}, {"handle": "tashfriedman", "name": "Natasha Friedman", "email": "natasha@myfunctionalfill.com", "phone": "", "website": "myfunctionalfill.com", "contactSource": "digital practice"}, {"handle": "mrtimrobards", "name": "Tim Robards", "email": "contact@endorsco.com", "phone": "", "website": "endorsco.com", "contactSource": "management (Endorse Co)"}, {"handle": "jeremyjcabral", "name": "Jeremy Cabral", "email": "jeremy@finder.com", "phone": "+61 2 9155 7800", "website": "finder.com.au", "contactSource": "company directory"}, {"handle": "erinvholland", "name": "Erin Holland", "email": "mb@atarimae.agency", "phone": "", "website": "atarimae.agency", "contactSource": "management (Atarimae Agency)"}, {"handle": "mark_bouris", "name": "Mark Bouris", "email": "contact@endorsco.com", "phone": "", "website": "markbouris.com.au", "contactSource": "management (Endorse Co)"}, {"handle": "drbradburton", "name": "Dr Brad Borton", "email": "", "phone": "", "website": "", "contactSource": "not found"}, {"handle": "laynebuckley", "name": "Layne Buckley", "email": "", "phone": "", "website": "", "contactSource": "not found"}, {"handle": "drgabrielleleone", "name": "Dr Gabrielle Leone", "email": "strong@drgabriellelyon.com", "phone": "", "website": "drgabriellelyon.com", "contactSource": "official website (corrected)"}, {"handle": "thehealthcode_au", "name": "The Health Code", "email": "hello@twopalms.com.au", "phone": "+61 478 536 312", "website": "", "contactSource": "Two Palms Media (Kurt Tilse/Sarah's Day management)"}, {"handle": "drchatterjee", "name": "Dr Rangan Chatterjee", "email": "info@drchatterjee.com", "phone": "", "website": "drchatterjee.com", "contactSource": "official website verified"}, {"handle": "doctors_kitchen", "name": "Dr Rupy Aujla", "email": "enquiries@bevjames.com", "phone": "", "website": "thedoctorskitchen.com", "contactSource": "Bev James Management (speaking engagements)"}, {"handle": "angelafosterperformance", "name": "Angela Foster", "email": "angela@angelafosterperformance.com", "phone": "", "website": "angelafosterperformance.com", "contactSource": "official website verified"}, {"handle": "theoptimalperformance", "name": "Dr Tommy Wood", "email": "", "phone": "1-800-698-2536", "website": "drtommywood.com", "contactSource": "All American Speakers / Performance Insights UK"}, {"handle": "drandrewsteele", "name": "Dr Andrew Steele", "email": "statto@andrewsteele.co.uk", "phone": "", "website": "andrewsteele.co.uk", "contactSource": "LinkedIn / website (rapid reply confirmed)"}, {"handle": "maxlugavere", "name": "Max Lugavere", "email": "contact@maxlugavere.com", "phone": "", "website": "maxlugavere.com", "contactSource": "website / booking agent"}, {"handle": "simonhillnutrition", "name": "Simon Hill", "email": "simon@theproof.com", "phone": "", "website": "theproof.com", "contactSource": "official website verified"}, {"handle": "bengreenfieldlife", "name": "Ben Greenfield", "email": "ben@bengreenfieldfitness.com", "phone": "1-877-209-9439", "website": "bengreenfieldlife.com", "contactSource": "official website verified"}, {"handle": "drmarkhyman", "name": "Dr Mark Hyman", "email": "support@drhyman.com", "phone": "888-702-2995", "website": "drhyman.com", "contactSource": "official website verified"}, {"handle": "hubermanlab", "name": "Andrew Huberman", "email": "info@hubermanlab.com", "phone": "+1 650-723-2465", "website": "hubermanlab.com", "contactSource": "official website verified"}, {"handle": "davidsinclairphd", "name": "David Sinclair", "email": "david_sinclair@hms.harvard.edu", "phone": "", "website": "davidasinclair.com", "contactSource": "Harvard Medical School directory"}, {"handle": "peterattiamd", "name": "Peter Attia", "email": "billing@peterattiamd.com", "phone": "", "website": "peterattiamd.com", "contactSource": "official website"}, {"handle": "drhyman", "name": "Dr Mark Hyman", "email": "contact@ultrawellnesscenter.com", "phone": "+1 413-637-9991", "website": "ultrawellnesscenter.com", "contactSource": "Ultra Wellness Center"}, {"handle": "foundmyfitness", "name": "Dr Rhonda Patrick", "email": "", "phone": "1-800-698-2536", "website": "foundmyfitness.com", "contactSource": "AAE Speakers Bureau (use contact form on website)"}, {"handle": "briandjohnson", "name": "Bryan Johnson", "email": "support@bryanjohnson.com", "phone": "", "website": "blueprint.bryanjohnson.com", "contactSource": "official website verified"}, {"handle": "garyvee", "name": "Gary Vaynerchuk", "email": "gary@vaynermedia.com", "phone": "", "website": "garyvaynerchuk.com", "contactSource": "official website + X/Twitter"}, {"handle": "lewishowes", "name": "Lewis Howes", "email": "lewis@greatness.com", "phone": "+1 614-350-3960", "website": "lewishowes.com", "contactSource": "official team email (corrected from contact@lewishowes.com)"}, {"handle": "drmindypelz", "name": "Dr Mindy Pelz", "email": "info@drmindypelz.com", "phone": "+1 408-298-8092", "website": "drmindypelz.com", "contactSource": "official website verified"}, {"handle": "jimkwik", "name": "Jim Kwik", "email": "contact@jimkwik.com", "phone": "", "website": "jimkwik.com", "contactSource": "official website verified"}, {"handle": "a.glimpse.of.amelia", "name": "Amelia (A Glimpse of Amelia)", "email": "Amelia@agoa.com.au", "phone": "", "website": "agoa.com.au", "contactSource": "official website verified"}, {"handle": "garybrecka", "name": "Gary Brecka", "email": "contact@theultimatehuman.com", "phone": "+1 239-325-9645", "website": "theultimatehuman.com", "contactSource": "The Ultimate Human website"}, {"handle": "dave.asprey", "name": "Dave Asprey", "email": "david@asprey.net", "phone": "+1 408-887-1505", "website": "daveasprey.com", "contactSource": "official website verified"}, {"handle": "cbum", "name": "Chris Bumstead", "email": "christopher.bumstead@gmail.com", "phone": "", "website": "cbumfitness.com", "contactSource": "ContactOut / MN2S booking agency"}, {"handle": "dr.amybkillen", "name": "Dr Amy Killen", "email": "amybkillen@gmail.com", "phone": "", "website": "dramykillen.com", "contactSource": "online sources"}, {"handle": "nathalieniddam", "name": "Nathalie Niddam", "email": "nathalie@nathalieniddam.com", "phone": "+1 929-589-1440", "website": "natniddam.com", "contactSource": "website"}, {"handle": "steven", "name": "Steven Bartlett", "email": "commercial@stevenbartlett.com", "phone": "", "website": "stevenbartlett.com", "contactSource": "official website + LinkedIn verified"}, {"handle": "melrobbins", "name": "Mel Robbins", "email": "hello@melrobbins.com", "phone": "+1 855-827-9635", "website": "melrobbins.com", "contactSource": "official website verified"}, {"handle": "lowtoxlife", "name": "Alexx Stuart", "email": "hello@lowtoxlife.com", "phone": "", "website": "lowtoxlife.com", "contactSource": "official contact page (corrected from contact@)"}, {"handle": "drkarafitzgerald", "name": "Dr Kara Fitzgerald", "email": "frontdesk@drkarafitzgerald.com", "phone": "+1 203-304-9502", "website": "drkarafitzgerald.com", "contactSource": "clinic contact page verified"}, {"handle": "d_alec_zeck", "name": "Alec Zeck", "email": "hello@thewayfwrd.com", "phone": "", "website": "thewayfwrd.com", "contactSource": "official website verified"}, {"handle": "bernadette.abraham", "name": "Bernadette Abraham", "email": "Bernadette@BernadetteAbraham.com", "phone": "", "website": "bernadetteabraham.com", "contactSource": "official website verified"}, {"handle": "pjharlowwellness", "name": "PJ Harlow", "email": "pjharlowwellness@gmail.com", "phone": "+1 302-236-5509", "website": "pjharlowwellness.com", "contactSource": "official website verified"}, {"handle": "dr.jess.md", "name": "Dr Jessica Peatross", "email": "support@drjessmd.com", "phone": "", "website": "drjessmd.com", "contactSource": "official website verified"}, {"handle": "healingcavelady", "name": "Mary Darnall", "email": "healingcavelady@gmail.com", "phone": "", "website": "healingcavelady.com", "contactSource": "official website verified"}, {"handle": "drjeffreybland", "name": "Dr Jeffrey Bland", "email": "jeffbland@bigboldhealth.com", "phone": "+1 206-201-3794", "website": "bigboldhealth.com", "contactSource": "official website (corrected from trisheury@)"}, {"handle": "dr.williamwallace", "name": "Dr William Wallace", "email": "", "phone": "", "website": "drwilliamwallace.com", "contactSource": "Instagram DM @dr.williamwallace (no public email)"}, {"handle": "tonymcaleavey", "name": "Tony McAleavey", "email": "", "phone": "", "website": "tonymcaleaveyfitness.com", "contactSource": "Instagram DM @tonymcaleavey (company dissolved 2024)"}, {"handle": "hattieboydle", "name": "Hattie Boydle", "email": "Hattieboydlept@gmail.com", "phone": "+61 2 418 406 955", "website": "hattieboydle.com.au", "contactSource": "official website verified"}, {"handle": "itscoachgoodman", "name": "Jonathan Goodman", "email": "Jonathan@theptdc.com", "phone": "", "website": "jonathangoodman.com", "contactSource": "PTDC website verified"}, {"handle": "drjohnberardi", "name": "Dr John Berardi", "email": "info@precisionnutrition.com", "phone": "1-877-660-6464", "website": "precisionnutrition.com", "contactSource": "Precision Nutrition company contact"}, {"handle": "sarahkleinerwellness", "name": "Sarah Kleiner", "email": "sarah@sarahkleinerwellness.com", "phone": "", "website": "sarahkleinerwellness.com", "contactSource": "website verified"}, {"handle": "doc_amen", "name": "Dr Daniel Amen", "email": "nbuchoz@amenclinic.com", "phone": "+1 855-421-5425", "website": "danielamenmd.com", "contactSource": "Amen Clinics management verified"}, {"handle": "paulsaladinomd", "name": "Dr Paul Saladino", "email": "info@paulsaladinomd.co", "phone": "", "website": "paulsaladinomd.com", "contactSource": "official website verified"}, {"handle": "kashkhanofficial", "name": "Kashif Khan", "email": "kashif@thednacompany.com", "phone": "+1 416-622-6800", "website": "kashkhanofficial.com", "contactSource": "DNA Company verified"}, {"handle": "bengreenfieldfitness", "name": "Ben Greenfield (Fitness)", "email": "support@bengreenfieldlife.com", "phone": "1-877-209-9439", "website": "bengreenfieldlife.com", "contactSource": "website verified"}, {"handle": "biological_dentist", "name": "Dr Seb (Biological Dentist)", "email": "reception@wonderofwellness.clinic", "phone": "", "website": "wonderofwellness.co.uk", "contactSource": "Wonder of Wellness clinic website"}, {"handle": "denny_dure", "name": "Denny Dure", "email": "", "phone": "", "website": "pillar.io/denny_dure", "contactSource": "Instagram DM @denny_dure only (DM 'DURE')"}, {"handle": "drpompa", "name": "Dr Daniel Pompa", "email": "info@pompaprogram.com", "phone": "1-800-691-7422", "website": "pompaprogram.com", "contactSource": "official website verified"}, {"handle": "dr.carriejones", "name": "Dr Carrie Jones", "email": "hello@drcarriejones.com", "phone": "", "website": "drcarriejones.com", "contactSource": "website verified"}, {"handle": "drmercola", "name": "Dr Joseph Mercola", "email": "editor@mercola.com", "phone": "1-877-985-2695", "website": "mercola.com", "contactSource": "official website verified"}, {"handle": "timferriss", "name": "Tim Ferriss", "email": "speakers@caa.com", "phone": "+1 424-288-2898", "website": "tim.blog", "contactSource": "CAA management (verified)"}, {"handle": "drjockers", "name": "Dr David Jockers", "email": "sales@drjockers.com", "phone": "+1 678-884-3561", "website": "drjockers.com", "contactSource": "official website verified"}, {"handle": "thomasdelauer", "name": "Thomas DeLauer", "email": "thomas.delauer@gmail.com", "phone": "+1 512-671-0110", "website": "thomasdelauer.com", "contactSource": "website verified"}, {"handle": "kaylabarnes", "name": "Kayla Barnes-Lentz", "email": "info@kaylabarnes.com", "phone": "+1 646-628-2009", "website": "kaylabarnes.com", "contactSource": "website verified"}, {"handle": "drgabriellelyon", "name": "Dr Gabrielle Lyon", "email": "strong@drgabriellelyon.com", "phone": "", "website": "drgabriellelyon.com", "contactSource": "website verified"}];
+function syncContacts(){
+  var synced=false;
+  CONTACT_LOOKUP.forEach(function(c){
+    var match=INF.find(function(r){return(r.handle||'').replace('@','').toLowerCase()===(c.handle||'').toLowerCase();});
+    if(!match)match=INF.find(function(r){return(r.name||'').toLowerCase()===(c.name||'').toLowerCase();});
+    if(match){
+      if(c.email&&!match.email){match.email=c.email;synced=true;}
+      if(c.phone&&!match.phone){match.phone=c.phone;synced=true;}
+      if(c.website&&!match.website){match.website=c.website;synced=true;}
+      if(c.contactSource&&!match.contactSource){match.contactSource=c.contactSource;synced=true;}
+    }
+  });
+  if(synced){sv();localStorage.setItem(LS_CSYNC,'1');}
+  return synced;
+}
+function forceResyncContacts(){
+  CONTACT_LOOKUP.forEach(function(c){
+    var match=INF.find(function(r){return(r.handle||'').replace('@','').toLowerCase()===(c.handle||'').toLowerCase();});
+    if(!match)match=INF.find(function(r){return(r.name||'').toLowerCase()===(c.name||'').toLowerCase();});
+    if(match){
+      if(c.email)match.email=c.email;
+      if(c.phone)match.phone=c.phone;
+      if(c.website)match.website=c.website;
+      if(c.contactSource)match.contactSource=c.contactSource;
+    }
+  });
+  sv();localStorage.setItem(LS_CSYNC,'1');
+  toast('Contact details synced to all '+INF.length+' influencers ✓');
+  renderInf();
+}
+function tick(){var n=new Date(),D=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];document.getElementById('clock').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');document.getElementById('clock-date').textContent=D[n.getDay()]+', '+n.getDate()+' '+M[n.getMonth()]+' '+n.getFullYear();}
+tick();setInterval(tick,30000);
+function showPage(name){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});document.querySelectorAll('.htab').forEach(function(t){t.classList.remove('active');});document.getElementById('page-'+name).classList.add('active');['overview','queue','influencers','podcasts','agents'].forEach(function(n,i){if(n===name)document.querySelectorAll('.htab')[i].classList.add('active');});if(name==='overview')initOv();if(name==='queue'){updateEmailBar();renderQueue();}if(name==='influencers')renderInf();if(name==='podcasts')renderPod();if(name==='agents')initAg();}
+function cM(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+function swTab(el,pid){var mo=el.closest('.md');mo.querySelectorAll('.mtab').forEach(function(t){t.classList.remove('active');});mo.querySelectorAll('.mpanel').forEach(function(p){p.classList.remove('active');});el.classList.add('active');document.getElementById(pid).classList.add('active');}
+function showNotes(t,b){document.getElementById('notes-t').textContent=t;document.getElementById('notes-b').textContent=b;document.getElementById('mo-notes').classList.add('open');}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2400);}
+function stats(){return{total:INF.length,conf:INF.filter(function(r){return r.status==='✅ CONFIRMED';}).length,pros:INF.filter(function(r){return r.status==='🔍 PROSPECT';}).length,act:INF.filter(function(r){return r.status==='🔥 ACTIVE PAID';}).length,out:INF.filter(function(r){return r.notes&&r.notes.includes('Outreach Drafted');}).length,pod:POD.length};}
+function updBanner(){var s=stats();var ids={'ov-t':'total','ov-c':'conf','ov-p':'pros','ov-a':'act','ov-o':'out','ov-pod':'pod'};Object.keys(ids).forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=s[ids[id]];});var ti=document.getElementById('tc-inf');if(ti)ti.textContent=s.total;var tp=document.getElementById('tc-pod');if(tp)tp.textContent=s.pod;var tc=document.getElementById('tc2');if(tc)tc.textContent=s.total;}
+function renderFunnel(id){var el=document.getElementById(id);if(!el)return;var s=stats(),tot=Math.max(s.total,1);el.innerHTML=[{l:'🔍 Prospects',n:s.pros,c:'#333'},{l:'✅ Confirmed',n:s.conf,c:'var(--grn)'},{l:'📤 Outreached',n:s.out,c:'var(--bl)'},{l:'🔥 Active Paid',n:s.act,c:'var(--or)'}].map(function(r){return'<div class="frow"><div class="flrow"><span class="flbl">'+r.l+'</span><span class="fnum">'+r.n+'</span></div><div class="fbg"><div class="ffill" style="width:'+Math.round(r.n/tot*100)+'%;background:'+r.c+';"></div></div></div>';}).join('');}
+function loadLog(){fetch('agent_log.json?t='+Date.now()).then(function(r){return r.json();}).then(function(log){var runs=log.runs||[];['log-count','ag-log-count'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=runs.length+' entries';});var html=runs.length===0?'<div class="logempty">No agent runs yet.</div>':runs.slice(0,20).map(function(r){var dc=r.status==='completed'?'ld-done':r.status==='error'?'ld-err':'ld-info';var ts=r.timestamp?new Date(r.timestamp).toLocaleString('en-AU'):'—';return'<div class="logentry"><div class="ldot '+dc+'"></div><div><div class="lagent">'+r.agent+'</div><div class="lmsg">'+r.summary+'</div><div class="lts">'+ts+'</div></div></div>';}).join('');['log-body','ag-log-body'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=html;});if(log.last_updated){var lu=document.getElementById('last-updated');if(lu)lu.textContent='Updated: '+new Date(log.last_updated).toLocaleString('en-AU');}}).catch(function(){});}
+function initOv(){updBanner();renderFunnel('funnel');loadLog();}
+function initAg(){updBanner();renderFunnel('ag-funnel');loadLog();}
+// INF TABLE
+function srtI(k){if(sI.k===k)sI.d*=-1;else{sI.k=k;sI.d=1;}renderInf();}
+// ── CUSTOM STATUSES ────────────────────────────────────────────────
+var DEFAULT_STATUSES=['✅ CONFIRMED','🔍 PROSPECT','🔥 ACTIVE PAID','🎓 IOH Student','📩 Contacted','🔄 In Talks','📋 Needs Follow-Up','⛔ Not Interested'];
+var LS_STAT='ioh_statuses_v1';
+function getStatuses(){return JSON.parse(localStorage.getItem(LS_STAT)||'null')||DEFAULT_STATUSES.slice();}
+function saveStatuses(arr){localStorage.setItem(LS_STAT,JSON.stringify(arr));}
+function buildStatusFilter(){
+  var sel=document.getElementById('istatus');if(!sel)return;
+  var cur=sel.value;sel.innerHTML='<option value="">All Statuses</option>';
+  getStatuses().forEach(function(s){sel.innerHTML+='<option value="'+s+'"'+(cur===s?' selected':'')+'>'+s+'</option>';});
+}
+function openManageStatuses(){
+  var arr=getStatuses();
+  var html='<div style="margin-bottom:14px;font-size:12px;color:var(--gr);">Add custom statuses below. Built-in ones cannot be deleted.</div>';
+  html+='<div id="stat-list">'+arr.map(function(s,i){
+    var isDefault=DEFAULT_STATUSES.indexOf(s)>=0;
+    return'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="flex:1;font-size:13px;padding:6px 10px;background:#111;border:1px solid #2A2A2A;border-radius:4px;color:var(--wh);">'+s+'</span>'+(isDefault?'<span style="font-size:10px;color:var(--gr);padding:4px 8px;">built-in</span>':'<button class="btn br sm" onclick="removeStatus('+i+')">Remove</button>')+'</div>';
+  }).join('')+'</div>';
+  html+='<div style="display:flex;gap:8px;margin-top:16px;"><input id="new-stat-input" class="sbox" placeholder="e.g. 🤝 Partnership Agreed" style="flex:1;"><button class="btn bg" onclick="addCustomStatus()">+ Add</button></div>';
+  document.getElementById('stat-modal-body').innerHTML=html;
+  document.getElementById('mo-statuses').classList.add('open');
+}
+function addCustomStatus(){
+  var val=document.getElementById('new-stat-input').value.trim();
+  if(!val)return;
+  var arr=getStatuses();if(arr.indexOf(val)>=0){toast('Status already exists');return;}
+  arr.push(val);saveStatuses(arr);buildStatusFilter();openManageStatuses();toast('Status added ✓');
+}
+function removeStatus(idx){
+  var arr=getStatuses();arr.splice(idx,1);saveStatuses(arr);buildStatusFilter();openManageStatuses();toast('Removed');
+}
+
+var showArchived=false;
+function toggleArchived(){
+  showArchived=!showArchived;
+  var btn=document.getElementById('arc-toggle');
+  var banner=document.getElementById('arc-banner');
+  btn.style.background=showArchived?'#2A2000':'';
+  btn.style.color=showArchived?'#C4A000':'';
+  if(banner){banner.style.display=showArchived?'block':'none';}
+  renderInf();
+}
+
+function renderInf(){
+  var q=(document.getElementById('isearch').value||'').toLowerCase();
+  var fc=document.getElementById('icountry').value;
+  var fs=document.getElementById('istatus').value;
+  var arcCount=INF.filter(function(r){return r.archived;}).length;
+  var arcEl=document.getElementById('arc-count');if(arcEl)arcEl.textContent=arcCount;
+  buildStatusFilter();
+  var d=INF.filter(function(r){
+    if(showArchived)return r.archived===true;
+    if(r.archived)return false;
+    var tx=((r.name||'')+(r.handle||'')+(r.niche||'')+(r.notes||'')+(r.dealType||'')+(r.hook||'')).toLowerCase();
+    return(!q||tx.includes(q))&&(!fc||(r.country||'').includes(fc))&&(!fs||r.status===fs);
+  });
+  // Sort logic — dropdown overrides column header sort
+  var sortSel=(document.getElementById('isort')||{}).value||'default';
+  if(sortSel==='newest'){
+    // lower INF index = newer (unshift adds to front, seed data newest-first)
+    d.sort(function(a,b){return INF.indexOf(a)-INF.indexOf(b);});
+  } else if(sortSel==='oldest'){
+    d.sort(function(a,b){return INF.indexOf(b)-INF.indexOf(a);});
+  } else if(sortSel==='name'){
+    d.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
+  } else if(sortSel==='followers'){
+    d.sort(function(a,b){
+      var fa=parseFloat((a.followers||'0').replace(/[^0-9.]/g,''))||0;
+      var fb=parseFloat((b.followers||'0').replace(/[^0-9.]/g,''))||0;
+      return fb-fa;
+    });
+  } else if(sI.k!=='country'){
+    // column header sort active
+    d.sort(function(a,b){var av=String(a[sI.k]||'').toLowerCase(),bv=String(b[sI.k]||'').toLowerCase();return av<bv?-sI.d:av>bv?sI.d:0;});
+  } else {
+    // default: status order, then country
+    var statusOrder={'✅ CONFIRMED':0,'🔥 ACTIVE PAID':1,'📩 Contacted':2,'🔄 In Talks':3,'📋 Needs Follow-Up':4,'🔍 PROSPECT':5,'🎓 IOH Student':6};
+    d.sort(function(a,b){var ao=statusOrder[a.status]!==undefined?statusOrder[a.status]:99,bo=statusOrder[b.status]!==undefined?statusOrder[b.status]:99;if(ao!==bo)return ao-bo;return(a.country||'').localeCompare(b.country||'');});
+  }
+
+  document.getElementById('itbody').innerHTML=d.map(function(r){
+    var idx=INF.indexOf(r);
+    // Hyperlinked Instagram handle
+    var igUrl=r.igProfile||(r.handle?'https://www.instagram.com/'+r.handle.replace('@','')+'/'  :'');
+    var ig=igUrl?'<a href="'+igUrl+'" target="_blank" class="igl" style="font-size:12px;">'+r.handle+'</a>':(r.handle||'—');
+    // Podcast link
+    var pod=r.podcastUrl?'<a href="'+r.podcastUrl+'" target="_blank" style="color:var(--gl);font-size:11px;text-decoration:none;" title="Open podcast">🎙 Listen</a>':'<span style="color:#444;font-size:11px;">—</span>';
+    var nr=(r.notes||'')+(r.prior?'\nPrior: '+r.prior:'')+(r.know?'\nKnows: '+r.know:'');
+    var nt=r.notes?'<span class="nc" onclick="showNotes(\''+r.name.replace(/'/g,"\\'")+'\',\''+nr.replace(/'/g,"\\'").replace(/\n/g,'\\n')+'\')">'+(r.notes||'').substring(0,38)+((r.notes||'').length>38?'…':'')+'</span>':'—';
+    var statuses=getStatuses();
+    var so=statuses.map(function(s){return'<option value="'+s+'"'+(r.status===s?' selected':'')+'>'+s+'</option>';}).join('');
+    var rowStyle=r.archived?'opacity:.55;':'';
+    // Row highlight for confirmed
+    var rowBg=r.status==='✅ CONFIRMED'?'background:#0A1A0A;':r.status==='🔥 ACTIVE PAID'?'background:#1A0E00;':'';
+    var emailBtn=r.email?'<button class="btn bd sm" style="margin-right:3px;background:#001A2A;color:#40A0D4;border-color:#004A6A;" onclick="navigator.clipboard.writeText(\''+r.email+'\');toast(\'Email copied!\')" title="'+r.email+'">📧</button>':'';
+    var actions=r.archived
+      ?'<button class="btn bg sm" style="margin-right:3px;" onclick="restoreI('+idx+')">↩ Restore</button><button class="btn br sm" onclick="delI('+idx+')">Del</button>'
+      :'<button class="btn bg sm" style="margin-right:3px;" onclick="openProfile('+idx+')">Profile</button>'+emailBtn+'<button class="btn bd sm" style="margin-right:3px;" onclick="oEditI('+idx+')">Edit</button><button class="btn bd sm" style="margin-right:3px;background:#2A1A00;color:#D4A040;border-color:#5A3A00;" onclick="archiveI('+idx+')">📦</button><button class="btn br sm" onclick="delI('+idx+')">Del</button>';
+    return'<tr style="'+rowStyle+rowBg+'"><td>'+ig+'</td><td style="font-weight:700;color:var(--wh);cursor:pointer;" onclick="openProfile('+idx+')">'+(r.name||'')+'</td><td style="font-size:11px;">'+(r.country||'')+'</td><td style="color:var(--gl);font-weight:700;">'+(r.followers||'—')+'</td><td style="font-size:11px;color:#AAA;max-width:140px;">'+(r.niche||'')+'</td><td>'+(r.archived?'<span style="color:#666;font-size:11px;">📦 Archived</span>':'<select class="isel" onchange="updIS('+idx+',this.value)">'+so+'</select>')+'</td><td style="font-size:11px;color:#AAA;">'+(r.dealType||'—')+'</td><td>'+pod+'</td><td>'+nt+'</td><td style="white-space:nowrap;">'+actions+'</td></tr>';
+  }).join('');
+  var active=INF.filter(function(r){return!r.archived;}).length;
+  document.getElementById('icnt').textContent=showArchived?'Showing '+d.length+' archived':('Showing '+d.length+' of '+active+' active — Confirmed pinned top');
+  updBanner();
+}
+function updIS(i,v){INF[i].status=v;sv();toast('Status updated');updBanner();}
+function archiveI(i){INF[i].archived=true;sv();renderInf();toast('Archived — restore anytime from 📦 View Archived');}
+function restoreI(i){INF[i].archived=false;sv();renderInf();toast('Restored ✓');}
+function delI(i){
+  var name=INF[i].name;
+  if(!confirm('Permanently delete '+name+'?\n\nThis cannot be undone. Use Archive instead to keep them recoverable.'))return;
+  INF.splice(i,1);sv();renderInf();toast('Deleted permanently');
+}
+function oAddI(){eI=null;document.getElementById('inf-mtitle').textContent='Add Influencer';['if-h','if-n','if-ni','if-f','if-d','if-cm','if-r1','if-r2','if-ig','if-em','if-ph','if-ws','if-nt','if-hk','if-ang','if-kn','if-pe','if-pr'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('if-st').value='🔍 PROSPECT';document.getElementById('if-c').value='Australia';document.getElementById('if-cta').value='';document.getElementById('if-tmp').value='cold';document.getElementById('if-prev').innerHTML='Fill in details and click Refresh.';document.querySelector('#mo-inf .mtab').click();document.getElementById('mo-inf').classList.add('open');}
+function oEditI(i){eI=i;var r=INF[i];document.getElementById('inf-mtitle').textContent='Edit — '+r.name;['h','n','ni','f','d','cm','r1','r2','ig','nt','hk','ang','kn','pe','pr'].forEach(function(k,j){var fld=['handle','name','niche','followers','dealType','commission','rev1','rev2','igProfile','notes','hook','angles','know','personal','prior'][j];document.getElementById('if-'+k).value=r[fld]||'';});document.getElementById('if-st').value=r.status||'🔍 PROSPECT';document.getElementById('if-cta').value=r.cta||'';document.getElementById('if-tmp').value=r.temp||'cold';document.getElementById('if-em').value=r.email||'';document.getElementById('if-ph').value=r.phone||'';document.getElementById('if-ws').value=r.website||'';var cs=document.getElementById('if-c');Array.from(cs.options).forEach(function(o){if(r.country&&r.country.includes(o.value))cs.value=o.value;});prevI();document.querySelector('#mo-inf .mtab').click();document.getElementById('mo-inf').classList.add('open');}
+function svI(){var r={handle:document.getElementById('if-h').value.trim(),name:document.getElementById('if-n').value.trim(),country:document.getElementById('if-c').value,niche:document.getElementById('if-ni').value.trim(),followers:document.getElementById('if-f').value.trim(),verified:'✓',bloodTest:'',status:document.getElementById('if-st').value,dealType:document.getElementById('if-d').value.trim(),commission:document.getElementById('if-cm').value.trim(),rev1:document.getElementById('if-r1').value.trim(),rev2:document.getElementById('if-r2').value.trim(),igProfile:document.getElementById('if-ig').value.trim(),email:document.getElementById('if-em').value.trim(),phone:document.getElementById('if-ph').value.trim(),website:document.getElementById('if-ws').value.trim(),notes:document.getElementById('if-nt').value.trim(),hook:document.getElementById('if-hk').value.trim(),angles:document.getElementById('if-ang').value.trim(),cta:document.getElementById('if-cta').value,know:document.getElementById('if-kn').value.trim(),personal:document.getElementById('if-pe').value.trim(),prior:document.getElementById('if-pr').value.trim(),temp:document.getElementById('if-tmp').value};if(!r.name){alert('Name required');return;}if(eI===null)INF.unshift(r);else INF[eI]=r;sv();cM('mo-inf');renderInf();toast(eI===null?'Added ✓':'Saved ✓');}
+function prevI(){var n=document.getElementById('if-n').value||'[Name]',hk=document.getElementById('if-hk').value,ang=document.getElementById('if-ang').value,ni=document.getElementById('if-ni').value,deal=document.getElementById('if-d').value||'partnership',cta=document.getElementById('if-cta').value;var ctaL=cta==='deck'?'Happy to send our program overview first.':cta==='meet'?"Happy to meet in person if you're in [city].":'Worth a 10-minute call to see if there\'s a fit?';var hkL=hk||('I came across your work on '+(ni||'health and performance')+' and it immediately stood out.');var bL=ang||'At IOH we run a science-backed longevity + blood testing certification program — your audience is exactly who we\'re trying to reach.';document.getElementById('if-prev').innerHTML='<span class="es">Subject: IOH x '+n+' — '+deal+'</span>Hey '+n.split(' ')[0]+',\n\n'+hkL+'\n\n'+bL+'\n\n'+ctaL+'\n\n— Jake, Founder IOH\nioh.com.au';}
+// POD TABLE
+function srtP(k){if(sP.k===k)sP.d*=-1;else{sP.k=k;sP.d=1;}renderPod();}
+function renderPod(){var q=(document.getElementById('psearch').value||'').toLowerCase(),fc=document.getElementById('pcountry').value,fp=document.getElementById('ppriority').value;var d=POD.filter(function(r){var tx=((r.showName||'')+(r.host||'')+(r.nicheFit||'')+(r.episodeAngle||'')+(r.notes||'')+(r.hook||'')).toLowerCase();return(!q||tx.includes(q))&&(!fc||(r.country||'').includes(fc))&&(!fp||r.priority===fp);});var po={'🔥 HIGH':0,'⚡ MED':1,'📌 LOW':2};if(sP.k==='priority')d.sort(function(a,b){return((po[a.priority]||1)-(po[b.priority]||1))*sP.d;});else d.sort(function(a,b){var av=String(a[sP.k]||'').toLowerCase(),bv=String(b[sP.k]||'').toLowerCase();return av<bv?-sP.d:av>bv?sP.d:0;});document.getElementById('ptbody').innerHTML=d.map(function(r){var idx=POD.indexOf(r);var hk=r.hook?'<span class="nc" title="'+r.hook.replace(/"/g,'&quot;')+'">'+r.hook.substring(0,40)+(r.hook.length>40?'…':'')+'</span>':'<span style="color:#555;font-size:11px;font-style:italic;">auto</span>';var nr=(r.notes||'')+(r.prior2?'\nPrior: '+r.prior2:'');var nt=r.notes?'<span class="nc" onclick="showNotes(\''+r.showName.replace(/'/g,"\\'")+'\',\''+nr.replace(/'/g,"\\'").replace(/\n/g,'\\n')+'\')">'+(r.notes||'').substring(0,38)+((r.notes||'').length>38?'…':'')+'</span>':'—';var stO=['📬 Outreach Needed','✅ Booked','🎙 Recorded'].map(function(s){return'<option value="'+s+'"'+(r.status===s?' selected':'')+'>'+s+'</option>';}).join('');var prO=['🔥 HIGH','⚡ MED','📌 LOW'].map(function(s){return'<option value="'+s+'"'+(r.priority===s?' selected':'')+'>'+s+'</option>';}).join('');var podEmailBtn=r.contact&&r.contact.includes('@')&&!r.contact.startsWith('@')?'<button class="btn bd sm" style="margin-right:3px;background:#001A2A;color:#40A0D4;border-color:#004A6A;" onclick="navigator.clipboard.writeText(\''+r.contact+'\');toast(\'Email copied!\')" title="'+r.contact+'">📧</button>':'';var podBookBtn=r.bookingUrl?'<a href="'+(r.bookingUrl.startsWith('http')?r.bookingUrl:'https://'+r.bookingUrl)+'" target="_blank" class="btn bd sm" style="margin-right:3px;background:#001A0A;color:#40C080;border-color:#004A20;text-decoration:none;">🎙 Pitch</a>':'';return'<tr><td style="font-weight:700;color:var(--wh);">'+(r.showName||'')+'</td><td>'+(r.host||'')+'</td><td style="font-size:11px;">'+(r.country||'')+'</td><td style="font-size:11px;color:var(--gl);">'+(r.audienceSize||'')+'</td><td style="font-size:11px;color:#CCC;max-width:200px;">'+(r.episodeAngle||'')+'</td><td><select class="isel" onchange="updPS('+idx+',this.value)">'+stO+'</select></td><td><select class="isel" onchange="updPP('+idx+',this.value)">'+prO+'</select></td><td>'+hk+'</td><td>'+nt+'</td><td style="white-space:nowrap;">'+podEmailBtn+podBookBtn+'<button class="btn bg sm" style="margin-right:3px;" onclick="oEditP('+idx+')">Edit</button><button class="btn br sm" onclick="delP('+idx+')">Del</button></td></tr>';}).join('');document.getElementById('pcnt').textContent='Showing '+d.length+' of '+POD.length+' podcasts';document.getElementById('tc-pod').textContent=POD.length;}
+function updPS(i,v){POD[i].status=v;sv();toast('Status updated');}
+function updPP(i,v){POD[i].priority=v;sv();toast('Priority updated');}
+function delP(i){if(!confirm('Delete "'+POD[i].showName+'"?'))return;POD.splice(i,1);sv();renderPod();toast('Deleted');}
+function oAddP(){eP=null;document.getElementById('pod-mtitle').textContent='Add Podcast';['pf-sn','pf-h','pf-a','pf-ni','pf-ea','pf-ct','pf-ph','pf-ws','pf-bu','pf-nt','pf-hk','pf-pts','pf-kn','pf-pr2'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('pf-st').value='📬 Outreach Needed';document.getElementById('pf-pr').value='⚡ MED';document.getElementById('pf-c').value='Australia';document.getElementById('pf-tmp').value='cold';document.getElementById('pf-prev').innerHTML='Fill in details and click Refresh.';document.querySelector('#mo-pod .mtab').click();document.getElementById('mo-pod').classList.add('open');}
+function oEditP(i){eP=i;var r=POD[i];document.getElementById('pod-mtitle').textContent='Edit — '+r.showName;document.getElementById('pf-sn').value=r.showName||'';document.getElementById('pf-h').value=r.host||'';document.getElementById('pf-a').value=r.audienceSize||'';document.getElementById('pf-ni').value=r.nicheFit||'';document.getElementById('pf-ea').value=r.episodeAngle||'';document.getElementById('pf-ct').value=r.contact||'';document.getElementById('pf-ph').value=r.phone||'';document.getElementById('pf-ws').value=r.website||'';document.getElementById('pf-bu').value=r.bookingUrl||'';document.getElementById('pf-nt').value=r.notes||'';document.getElementById('pf-hk').value=r.hook||'';document.getElementById('pf-pts').value=r.points||'';document.getElementById('pf-kn').value=r.know||'';document.getElementById('pf-pr2').value=r.prior2||'';document.getElementById('pf-st').value=r.status||'📬 Outreach Needed';document.getElementById('pf-pr').value=r.priority||'⚡ MED';document.getElementById('pf-tmp').value=r.temp||'cold';var cs=document.getElementById('pf-c');Array.from(cs.options).forEach(function(o){if(r.country&&r.country.includes(o.value))cs.value=o.value;});prevP();document.querySelector('#mo-pod .mtab').click();document.getElementById('mo-pod').classList.add('open');}
+function svP(){var r={showName:document.getElementById('pf-sn').value.trim(),host:document.getElementById('pf-h').value.trim(),country:document.getElementById('pf-c').value,audienceSize:document.getElementById('pf-a').value.trim(),nicheFit:document.getElementById('pf-ni').value.trim(),episodeAngle:document.getElementById('pf-ea').value.trim(),contact:document.getElementById('pf-ct').value.trim(),phone:document.getElementById('pf-ph').value.trim(),website:document.getElementById('pf-ws').value.trim(),bookingUrl:document.getElementById('pf-bu').value.trim(),status:document.getElementById('pf-st').value,priority:document.getElementById('pf-pr').value,notes:document.getElementById('pf-nt').value.trim(),hook:document.getElementById('pf-hk').value.trim(),points:document.getElementById('pf-pts').value.trim(),know:document.getElementById('pf-kn').value.trim(),prior2:document.getElementById('pf-pr2').value.trim(),temp:document.getElementById('pf-tmp').value};if(!r.showName){alert('Show name required');return;}if(eP===null)POD.unshift(r);else POD[eP]=r;sv();cM('mo-pod');renderPod();toast(eP===null?'Added ✓':'Saved ✓');}
+function prevP(){var sn=document.getElementById('pf-sn').value||'[Show]',h=document.getElementById('pf-h').value||'[Host]',hk=document.getElementById('pf-hk').value,pts=document.getElementById('pf-pts').value,ni=document.getElementById('pf-ni').value;var hkL=hk||(sn+' covers exactly the intersection of '+(ni||'health, performance and longevity')+' that I want to bring to your audience.');var pL=pts||"I'd share what our cohort data shows about the blood markers that drive longevity — and what most practitioners and high-performers are missing.";document.getElementById('pf-prev').innerHTML='<span class="es">Subject: '+sn+' — Jake from IOH (Guest Pitch)</span>Hi '+h.split(' ')[0]+',\n\n'+hkL+'\n\n'+pL+'\n\nWorth a quick call to explore?\n\n— Jake, Founder IOH\nioh.com.au';}
+function expData(){var d={influencers:INF,podcasts:POD,exported:new Date().toISOString()};var b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='ioh_tracker_'+new Date().toISOString().slice(0,10)+'.json';a.click();toast('Exported — drop in IOH folder for agents');}
+
+// ── CRM PROFILE ───────────────────────────────────────────────────
+var currentProfileIdx=null;
+function openProfile(idx){
+  currentProfileIdx=idx;
+  var r=INF[idx];
+  if(!r.crm)r.crm={comms:[],whitelist:'',liveDate:'',revenueGenerated:'',payout:'',certs:'',rate:'',revNotes:'',nextAction:'',nextActionDate:'',nextActionNotes:''};
+  document.getElementById('prof-name').textContent=r.name;
+  var igUrl=r.igProfile||(r.handle?'https://www.instagram.com/'+r.handle.replace('@',''):'' );
+  document.getElementById('prof-handle').innerHTML=(igUrl?'<a href="'+igUrl+'" target="_blank" style="color:var(--gl);text-decoration:none;">'+r.handle+'</a> ':r.handle||'')+(r.podcastUrl?'&nbsp;·&nbsp;<a href="'+r.podcastUrl+'" target="_blank" style="color:var(--gl);text-decoration:none;">🎙 Podcast</a>':'');
+  // Status dropdown
+  var sel=document.getElementById('prof-status-sel');
+  sel.innerHTML=getStatuses().map(function(s){return'<option value="'+s+'"'+(r.status===s?' selected':'')+'>'+s+'</option>';}).join('');
+  document.getElementById('prof-temp-sel').value=r.temp||'cold';
+  // Overview body
+  var ig=igUrl?'<a href="'+igUrl+'" target="_blank" style="color:var(--gl);">'+r.handle+'</a>':r.handle||'—';
+  var pod=r.podcastUrl?'<a href="'+r.podcastUrl+'" target="_blank" style="color:var(--gl);">🎙 Link</a>':'—';
+  document.getElementById('prof-overview-body').innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
+    row('Country',r.country)+row('Followers',r.followers)+row('Niche',r.niche)+(r.email?row('Email','<a href="mailto:'+r.email+'" style="color:var(--gl);">'+r.email+'</a> <span onclick="navigator.clipboard.writeText(\'' +r.email+ '\');toast(\'Copied!\')" style="cursor:pointer;color:#666;">⎘</span>'):'')+row('Deal Type',r.dealType)+
+    row('Commission',r.commission)+row('Rev Share (1st 6)',r.rev1)+row('Rev Share (after 6)',r.rev2)+
+    row('Instagram',ig)+row('Podcast',pod)+row('Blood Test',r.bloodTest)+
+    '</div>'+
+    (r.notes?'<div style="margin-top:14px;padding:10px 12px;background:#111;border:1px solid #1E1E1E;border-radius:4px;font-size:11px;color:#AAA;line-height:1.6;">'+r.notes+'</div>':'');
+  // Revenue
+  document.getElementById('rev-whitelist').value=r.crm.whitelist||'';
+  document.getElementById('rev-livedate').value=r.crm.liveDate||'';
+  document.getElementById('rev-generated').value=r.crm.revenueGenerated||'';
+  document.getElementById('rev-payout').value=r.crm.payout||'';
+  document.getElementById('rev-certs').value=r.crm.certs||'';
+  document.getElementById('rev-rate').value=r.crm.rate||'';
+  document.getElementById('rev-notes').value=r.crm.revNotes||'';
+  updateRevSummary();
+  // Next action
+  document.getElementById('act-type').value=r.crm.nextAction||'';
+  document.getElementById('act-date').value=r.crm.nextActionDate||'';
+  document.getElementById('act-notes').value=r.crm.nextActionNotes||'';
+  checkOverdue();
+  // Comms
+  renderCommsLog();
+  // Contact panel
+  var r2=INF[idx];
+  var cbody=document.getElementById('prof-contact-body');
+  if(cbody){
+    var cRows='';
+    function cRow(label,val,extra){if(!val)return'<div style="padding:9px 0;border-bottom:1px solid #1A1A1A;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:.5px;">'+label+'</span><span style="font-size:11px;color:#555;font-style:italic;">not found</span></div>';return'<div style="padding:9px 0;border-bottom:1px solid #1A1A1A;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:.5px;">'+label+'</span><span style="font-size:12px;color:var(--wh);">'+val+'&nbsp;<span onclick="navigator.clipboard.writeText(\''+extra+'\');toast(\'Copied!\')" style="cursor:pointer;color:#555;font-size:11px;">⎘</span></span></div>';}
+    cRows+=cRow('Email',r2.email?'<a href="mailto:'+r2.email+'" style="color:var(--gl);text-decoration:none;">'+r2.email+'</a>':'',(r2.email||''));
+    cRows+=cRow('Phone',r2.phone||'',r2.phone||'');
+    cRows+=cRow('Instagram DM','<a href="https://ig.me/m/'+(r2.handle||'').replace('@','')+'" target="_blank" style="color:var(--gl);text-decoration:none;">'+r2.handle+'</a>',(r2.handle||''));
+    cRows+=cRow('Website',r2.website?'<a href="'+(r2.website.startsWith('http')?r2.website:'https://'+r2.website)+'" target="_blank" style="color:var(--gl);text-decoration:none;">'+r2.website+'</a>':'',(r2.website||''));
+    if(r2.contactSource)cRows+='<div style="padding:9px 0;border-bottom:1px solid #1A1A1A;"><span style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:.5px;">Source</span><div style="font-size:11px;color:#999;margin-top:3px;">'+r2.contactSource+'</div></div>';
+    cbody.innerHTML=cRows;
+    document.getElementById('pc-email').value=r2.email||'';
+    document.getElementById('pc-phone').value=r2.phone||'';
+    document.getElementById('pc-website').value=r2.website||'';
+    document.getElementById('pc-source').value=r2.contactSource||'';
+  }
+  // Reset to first tab
+  document.querySelector('#mo-profile .mtab').click();
+  document.getElementById('mo-profile').classList.add('open');
+}
+function row(k,v){return'<div style="padding:7px 0;border-bottom:1px solid #1A1A1A;"><span style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:.5px;">'+k+'</span><div style="font-size:12px;color:var(--grl);margin-top:2px;">'+(v||'—')+'</div></div>';}
+function updateProfileStatus(){if(currentProfileIdx===null)return;INF[currentProfileIdx].status=document.getElementById('prof-status-sel').value;sv();renderInf();toast('Stage updated');}
+function updateProfileTemp(){if(currentProfileIdx===null)return;INF[currentProfileIdx].temp=document.getElementById('prof-temp-sel').value;sv();}
+function saveContact(){
+  if(currentProfileIdx===null)return;
+  var r=INF[currentProfileIdx];
+  r.email=document.getElementById('pc-email').value.trim();
+  r.phone=document.getElementById('pc-phone').value.trim();
+  r.website=document.getElementById('pc-website').value.trim();
+  r.contactSource=document.getElementById('pc-source').value.trim();
+  sv();
+  // Refresh contact body
+  var cbody=document.getElementById('prof-contact-body');
+  if(cbody){
+    var cRows='';
+    function cRow2(label,val,extra){if(!val)return'<div style="padding:9px 0;border-bottom:1px solid #1A1A1A;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:.5px;">'+label+'</span><span style="font-size:11px;color:#555;font-style:italic;">not found</span></div>';return'<div style="padding:9px 0;border-bottom:1px solid #1A1A1A;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:.5px;">'+label+'</span><span style="font-size:12px;color:var(--wh);">'+val+'&nbsp;<span onclick="navigator.clipboard.writeText(\''+extra+'\');toast(\'Copied!\')" style="cursor:pointer;color:#555;font-size:11px;">⎘</span></span></div>';}
+    cRows+=cRow2('Email',r.email?'<a href="mailto:'+r.email+'" style="color:var(--gl);text-decoration:none;">'+r.email+'</a>':'',(r.email||''));
+    cRows+=cRow2('Phone',r.phone||'',r.phone||'');
+    cRows+=cRow2('Instagram DM','<a href="https://ig.me/m/'+(r.handle||'').replace('@','')+'" target="_blank" style="color:var(--gl);text-decoration:none;">'+r.handle+'</a>',(r.handle||''));
+    cRows+=cRow2('Website',r.website?'<a href="'+(r.website.startsWith('http')?r.website:'https://'+r.website)+'" target="_blank" style="color:var(--gl);text-decoration:none;">'+r.website+'</a>':'',(r.website||''));
+    if(r.contactSource)cRows+='<div style="padding:9px 0;border-bottom:1px solid #1A1A1A;"><span style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:.5px;">Source</span><div style="font-size:11px;color:#999;margin-top:3px;">'+r.contactSource+'</div></div>';
+    cbody.innerHTML=cRows;
+  }
+  toast('Contact saved ✓');
+}
+function addCommLog(){
+  if(currentProfileIdx===null)return;
+  var r=INF[currentProfileIdx];if(!r.crm)r.crm={comms:[]};if(!r.crm.comms)r.crm.comms=[];
+  var type=document.getElementById('comm-type').value;
+  var note=document.getElementById('comm-note').value.trim();
+  if(!note){toast('Add a note first');return;}
+  var entry={type:type,note:note,date:new Date().toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}),ts:new Date().toISOString()};
+  r.crm.comms.unshift(entry);
+  // Auto-update notes field too
+  r.notes=(r.notes||'')+(r.notes?'\n':'')+entry.date+' '+type+': '+note;
+  sv();renderCommsLog();document.getElementById('comm-note').value='';toast('Logged ✓');
+}
+function renderCommsLog(){
+  if(currentProfileIdx===null)return;
+  var r=INF[currentProfileIdx];
+  var comms=(r.crm&&r.crm.comms)||[];
+  var el=document.getElementById('comm-log-body');
+  if(comms.length===0){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--gr);font-size:12px;font-style:italic;">No communications logged yet.</div>';return;}
+  el.innerHTML=comms.map(function(c){
+    return'<div style="padding:9px 0;border-bottom:1px solid #1A1A1A;display:flex;gap:10px;align-items:flex-start;"><div style="font-size:13px;flex-shrink:0;">'+c.type.split(' ')[0]+'</div><div style="flex:1;"><div style="font-size:11px;color:var(--gl);font-weight:700;">'+c.type+'</div><div style="font-size:12px;color:#CCC;margin-top:2px;">'+c.note+'</div><div style="font-size:10px;color:#555;margin-top:3px;">'+c.date+'</div></div></div>';
+  }).join('');
+}
+function saveRevenue(){
+  if(currentProfileIdx===null)return;
+  var r=INF[currentProfileIdx];if(!r.crm)r.crm={comms:[]};
+  r.crm.whitelist=document.getElementById('rev-whitelist').value;
+  r.crm.liveDate=document.getElementById('rev-livedate').value;
+  r.crm.revenueGenerated=document.getElementById('rev-generated').value;
+  r.crm.payout=document.getElementById('rev-payout').value;
+  r.crm.certs=document.getElementById('rev-certs').value;
+  r.crm.rate=document.getElementById('rev-rate').value;
+  r.crm.revNotes=document.getElementById('rev-notes').value;
+  sv();updateRevSummary();
+}
+function updateRevSummary(){
+  var gen=parseFloat(document.getElementById('rev-generated').value)||0;
+  var pay=parseFloat(document.getElementById('rev-payout').value)||0;
+  var certs=parseInt(document.getElementById('rev-certs').value)||0;
+  var el=document.getElementById('rev-summary');
+  if(gen>0||pay>0||certs>0){
+    el.style.display='block';
+    var net=gen-pay;
+    el.innerHTML='Revenue: <strong>$'+gen.toLocaleString()+'</strong> &nbsp;·&nbsp; Payout: <strong>$'+pay.toLocaleString()+'</strong> &nbsp;·&nbsp; Net IOH: <strong>$'+net.toLocaleString()+'</strong> &nbsp;·&nbsp; Certs referred: <strong>'+certs+'</strong>';
+  } else {el.style.display='none';}
+}
+function saveNextAction(){
+  if(currentProfileIdx===null)return;
+  var r=INF[currentProfileIdx];if(!r.crm)r.crm={comms:[]};
+  r.crm.nextAction=document.getElementById('act-type').value;
+  r.crm.nextActionDate=document.getElementById('act-date').value;
+  r.crm.nextActionNotes=document.getElementById('act-notes').value;
+  sv();checkOverdue();
+}
+function checkOverdue(){
+  var d=document.getElementById('act-date').value;
+  var el=document.getElementById('act-overdue');
+  if(d&&new Date(d)<new Date()){el.style.display='block';}else{el.style.display='none';}
+}
+
+// ── EMAIL PROFILE MANAGER ─────────────────────────────────────────
+var LS_PROFILES='ioh_profiles_v3';
+var LS_ACTIVE='ioh_active_profile_v3';
+
+function defaultProfiles(){
+  return [
+    {id:'torus',  label:'Torus Capital', icon:'🏢', email:'wade@toruscap.vc',           name:'Wade Foxx', sig:'Wade Foxx | Torus Capital | toruscap.vc',                      locked:true},
+    {id:'ioh',    label:'IOH',           icon:'🏥', email:'wade@instituteofhealth.com',  name:'Wade Foxx', sig:'Wade Foxx | Institute of Health | instituteofhealth.com',      locked:false},
+    {id:'mrfoxx', label:'MrFoxx',        icon:'🦊', email:'wade.foxx@mrfoxx.com',        name:'Wade Foxx', sig:'Wade Foxx | MrFoxx | mrfoxx.com — alias: wade.foxx@8figureclosers.com', locked:false}
+  ];
+}
+function getProfiles(){
+  var stored=localStorage.getItem(LS_PROFILES);
+  return stored?JSON.parse(stored):defaultProfiles();
+}
+function saveProfiles(p){localStorage.setItem(LS_PROFILES,JSON.stringify(p));}
+function getActiveProfile(){
+  var id=localStorage.getItem(LS_ACTIVE)||'ioh';
+  var profiles=getProfiles();
+  return profiles.find(function(p){return p.id===id;})||profiles[0];
+}
+function setActiveProfile(id){
+  localStorage.setItem(LS_ACTIVE,id);
+  updateEmailBar();
+  saveActiveProfileToFile();
+  toast('Active profile updated ✓');
+  renderProfileCards();
+}
+function saveActiveProfileToFile(){
+  // Write config so agents can read it
+  var p=getActiveProfile();
+  var cfg={email:p.email,name:p.name,label:p.label,sig:p.sig,updated:new Date().toISOString()};
+  // Store in localStorage for agent reading via exported JSON
+  localStorage.setItem('ioh_email_config_v1', JSON.stringify(cfg));
+}
+function addProfile(){
+  var label=document.getElementById('np-label').value.trim();
+  var icon=document.getElementById('np-icon').value.trim()||'📧';
+  var email=document.getElementById('np-email').value.trim();
+  var name=document.getElementById('np-name').value.trim();
+  var sig=document.getElementById('np-sig').value.trim();
+  if(!email||!name){toast('Email and name required');return;}
+  var profiles=getProfiles();
+  var id='custom_'+Date.now();
+  profiles.push({id:id,label:label||email,icon:icon,email:email,name:name,sig:sig,locked:false});
+  saveProfiles(profiles);
+  renderProfileCards();
+  ['np-label','np-icon','np-email','np-name','np-sig'].forEach(function(id){document.getElementById(id).value='';});
+  toast('Profile added ✓');
+}
+function removeProfile(id){
+  var profiles=getProfiles().filter(function(p){return p.id!==id;});
+  saveProfiles(profiles);
+  if(localStorage.getItem(LS_ACTIVE)===id) localStorage.setItem(LS_ACTIVE,'ioh');
+  renderProfileCards();
+  updateEmailBar();
+  toast('Removed');
+}
+function toggleProfileManager(){
+  var el=document.getElementById('profile-manager');
+  el.style.display=el.style.display==='none'?'block':'none';
+  if(el.style.display==='block') renderProfileCards();
+}
+function renderProfileCards(){
+  var profiles=getProfiles();
+  var activeId=localStorage.getItem(LS_ACTIVE)||'ioh';
+  var el=document.getElementById('profile-cards');if(!el)return;
+  el.innerHTML=profiles.map(function(p){
+    var isActive=p.id===activeId;
+    var hasEmail=p.email&&p.email.length>0;
+    var border=isActive?'border-color:var(--gd);':'border-color:#2A2A2A;';
+    var bg=isActive?'background:#0A1208;':'background:#111;';
+    return'<div style="'+bg+border+'border:1px solid;border-radius:5px;padding:13px 14px;position:relative;">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'+
+        '<span style="font-size:18px;">'+p.icon+'</span>'+
+        '<div>'+
+          '<div style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:var(--wh);">'+p.label+'</div>'+
+          '<div style="font-size:10px;color:var(--gr);">'+p.name+'</div>'+
+        '</div>'+
+        (isActive?'<span style="margin-left:auto;background:var(--gnd);color:var(--grn);font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;">ACTIVE</span>':'')+
+      '</div>'+
+      '<div style="font-size:11px;color:'+(hasEmail?'var(--gl)':'var(--rd)')+';">'+
+        (hasEmail?'✓ '+p.email:'⚠️ No email configured')+
+      '</div>'+
+      (p.sig?'<div style="font-size:10px;color:#555;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+p.sig+'</div>':'')+
+      '<div style="display:flex;gap:6px;margin-top:10px;">'+
+        (!isActive&&hasEmail?'<button class="btn bg sm" onclick="setActiveProfile(\''+p.id+'\')">Set Active</button>':'')+
+        (!hasEmail?'<button class="btn bd sm" onclick="promptSetEmail(\''+p.id+'\')" style="background:#2A1000;color:#D4A040;border-color:#5A3000;">Add Email</button>':'')+
+        (!p.locked&&isActive?'':'')+ // don't show remove if active
+        (!p.locked&&!isActive?'<button class="btn br sm" onclick="removeProfile(\''+p.id+'\')">Remove</button>':'')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function promptSetEmail(id){
+  var profiles=getProfiles();
+  var p=profiles.find(function(x){return x.id===id;});
+  if(!p)return;
+  var email=prompt('Enter email address for '+p.label+':',p.email||'');
+  if(email===null)return;
+  p.email=email.trim();
+  var name=prompt('Display name for outreach (e.g. Jake):',p.name||'');
+  if(name) p.name=name.trim();
+  saveProfiles(profiles);
+  renderProfileCards();
+  updateEmailBar();
+  toast('Email set ✓');
+}
+function updateEmailBar(){
+  var p=getActiveProfile();
+  var lbl=document.getElementById('active-profile-badge');
+  if(lbl){
+    if(p&&p.email){
+      lbl.innerHTML=p.icon+' '+p.name+' &lt;'+p.email+'&gt;';
+      lbl.style.color='var(--gl)';
+    } else {
+      lbl.textContent='Click "Email Profiles" to configure →';
+      lbl.style.color='var(--gr)';
+    }
+  }
+  saveActiveProfileToFile();
+}
+
+// ── OUTREACH QUEUE ────────────────────────────────────────────────
+var currentQTab='waiting';
+var approveIdx=null;
+
+function setQueueTab(tab){
+  currentQTab=tab;
+  ['waiting','approved','sent'].forEach(function(t){
+    var btn=document.getElementById('qt-'+t);
+    if(btn){btn.style.background=t===tab?'var(--gd)':'';btn.style.color=t===tab?'var(--wh)':'';btn.className='btn '+(t===tab?'':'bd');btn.style.fontSize='12px';}
+  });
+  renderQueue();
+}
+
+function renderQueue(){
+  var waiting=[],approved=[],sent=[];
+  INF.forEach(function(r,i){
+    if(r.archived)return;
+    var outreachState=r.outreachState||'';
+    var n=r.notes||'';
+    // Sent/drafted = notes contain Outreach Drafted or Contacted status
+    if(outreachState==='sent'||outreachState==='drafted'||n.includes('Outreach Drafted')||r.status==='📩 Contacted'||r.status==='📩 Email Sent'){
+      sent.push({r:r,i:i});
+    } else if(outreachState==='approved'||r.status==='📤 Approved for Outreach'){
+      approved.push({r:r,i:i});
+    } else if(r.status==='✅ CONFIRMED'||r.status==='📋 Needs Follow-Up'){
+      waiting.push({r:r,i:i});
+    }
+  });
+  // Update counts
+  document.getElementById('qt-waiting-cnt').textContent=waiting.length;
+  document.getElementById('qt-approved-cnt').textContent=approved.length;
+  document.getElementById('qt-sent-cnt').textContent=sent.length;
+  document.getElementById('tc-queue').textContent=waiting.length+approved.length;
+
+  var list=currentQTab==='waiting'?waiting:currentQTab==='approved'?approved:sent;
+  var el=document.getElementById('queue-body');
+  if(!el)return;
+
+  if(list.length===0){
+    var emptyMsg=currentQTab==='waiting'?'No influencers waiting for approval. Confirm more prospects in the Influencers tab.':
+      currentQTab==='approved'?'No approvals yet. Approve influencers from the Awaiting tab — the agent will draft their emails on next run.':
+      'No outreach sent yet. Approve influencers and run the outreach agent.';
+    el.innerHTML='<div style="padding:40px;text-align:center;background:var(--dk);border:1px solid #222;border-radius:6px;color:var(--gr);font-size:13px;font-style:italic;">'+emptyMsg+'</div>';
+    return;
+  }
+
+  el.innerHTML=list.map(function(item){
+    var r=item.r,i=item.i;
+    var igUrl=r.igProfile||(r.handle?'https://www.instagram.com/'+r.handle.replace('@',''):'' );
+    var temp=r.temp==='hot'?'🔥':r.temp==='warm'?'🌤':'❄️';
+    var hasHook=r.hook&&r.hook.length>0;
+    var hasAngles=r.angles&&r.angles.length>0;
+    var readiness=(hasHook?1:0)+(hasAngles?1:0)+(r.know&&r.know.length>0?1:0);
+    var readLabel=readiness===3?'<span style="color:var(--grn);font-size:11px;font-weight:700;">✅ Fully personalised</span>':readiness===2?'<span style="color:#D4C040;font-size:11px;">⚡ Partially personalised</span>':'<span style="color:#888;font-size:11px;">❌ No personal notes yet</span>';
+    var stateColor=currentQTab==='approved'?'var(--gnd)':currentQTab==='sent'?'var(--bld)':'var(--dk2)';
+    var stateBorder=currentQTab==='approved'?'#2A5A32':currentQTab==='sent'?'#1A4A7A':'#222';
+
+    var actions='';
+    if(currentQTab==='waiting'){
+      actions='<button class="btn bg" style="font-size:12px;" onclick="openApprove('+i+')">✏️ Add Notes &amp; Approve</button>';
+    } else if(currentQTab==='approved'){
+      actions='<button class="btn bd" style="font-size:12px;margin-right:8px;" onclick="openApprove('+i+')">✏️ Edit Notes</button><button class="btn br sm" onclick="unapprove('+i+')">Unapprove</button>';
+    } else {
+      actions='<a href="https://mail.google.com/mail/u/0/#drafts" target="_blank" class="btn bd" style="font-size:12px;text-decoration:none;">Open Gmail Drafts ↗</a>';
+    }
+
+    return'<div style="background:'+stateColor+';border:1px solid '+stateBorder+';border-radius:6px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:flex-start;gap:16px;">'+
+      '<div style="flex:1;">'+
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
+          '<span style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:var(--wh);cursor:pointer;" onclick="openProfile('+i+')">'+(r.name||'')+'</span>'+
+          '<a href="'+igUrl+'" target="_blank" style="font-size:11px;color:var(--gl);text-decoration:none;">'+(r.handle||'')+'</a>'+
+          '<span style="font-size:12px;">'+temp+'</span>'+
+          readLabel+
+        '</div>'+
+        '<div style="font-size:11px;color:var(--gr);margin-bottom:8px;">'+(r.country||'')+(r.followers?' · '+r.followers:'')+(r.niche?' · '+r.niche.substring(0,60):'')+(r.dealType?' · '+r.dealType:'')+'</div>'+
+        (r.hook?'<div style="font-size:11px;color:#CCC;background:#111;border-left:3px solid var(--gd);padding:6px 10px;border-radius:0 4px 4px 0;margin-bottom:6px;font-style:italic;">"'+r.hook.substring(0,120)+(r.hook.length>120?'…':'')+'"</div>':'')+
+        (r.angles?'<div style="font-size:11px;color:#888;margin-bottom:4px;">Angles: '+r.angles.substring(0,100)+(r.angles.length>100?'…':'')+'</div>':'')+
+        (r.know?'<div style="font-size:11px;color:#888;">Connection: '+r.know.substring(0,100)+(r.know.length>100?'…':'')+'</div>':'')+
+      '</div>'+
+      '<div style="flex-shrink:0;display:flex;flex-direction:column;gap:7px;align-items:flex-end;">'+
+        actions+
+        (r.podcastUrl?'<a href="'+r.podcastUrl+'" target="_blank" style="font-size:11px;color:var(--gr);text-decoration:none;">🎙 Podcast</a>':'')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function openApprove(idx){
+  approveIdx=idx;
+  var r=INF[idx];
+  document.getElementById('appr-title').textContent='Approve Outreach — '+r.name;
+  var igUrl=r.igProfile||(r.handle?'https://www.instagram.com/'+r.handle.replace('@',''):'' );
+  document.getElementById('appr-sub').innerHTML='<a href="'+igUrl+'" target="_blank" style="color:var(--gl);text-decoration:none;">'+(r.handle||'')+'</a> · '+(r.country||'')+(r.followers?' · '+r.followers:'');
+  document.getElementById('appr-hook').value=r.hook||'';
+  document.getElementById('appr-know').value=r.know||'';
+  document.getElementById('appr-angles').value=r.angles||'';
+  document.getElementById('appr-cta').value=r.cta||'call';
+  document.getElementById('appr-temp').value=r.temp||'cold';
+  // Restore saved strategy or default to podcast-invite
+  selectStrategy(r.approvedStrategy||'podcast-invite');
+  // Load saved copy if exists, otherwise generate fresh
+  var copyEl=document.getElementById('appr-copy');
+  var subjEl=document.getElementById('appr-subject');
+  if(r.approvedCopy){
+    copyEl.value=r.approvedCopy;
+    subjEl.value=r.approvedSubject||'';
+  } else {
+    copyEl.value='';
+    subjEl.value='';
+    refreshApprPreview();
+  }
+  document.getElementById('mo-approve').classList.add('open');
+}
+
+// ── STRATEGY SELECTOR ─────────────────────────────────────────────
+var STRATEGY_CONTEXT = {
+  'podcast-invite': '🎙 <strong>IOH Podcast Strategy</strong> — Lead with the IOH show launch. We have 12 confirmed longevity + biohacking experts. You\'re inviting them to be a guest on IOH\'s show — AND offering Jake as a guest on theirs if they have a podcast. No business ask in this email. Pure value. The relationship builds naturally from there, then whitelist/ambassador comes up organically after they\'ve met Jake.',
+  'podcast-guest': '🎤 <strong>Jake as Guest Strategy</strong> — Pitch Jake directly as a podcast guest on their existing show. Lead with the episode angle — what Jake can bring to their audience. Best for shows with large established audiences where the guest angle is the clearest value exchange.',
+  'ambassador': '🤝 <strong>Ambassador/Affiliate Strategy</strong> — Direct partnership pitch. Best used when they\'re already warm (met in person, expressed interest, existing relationship). Mention IOH program, deal structure, and propose a call. Don\'t use this cold.',
+  'cert': '🏥 <strong>Blood Cert Strategy</strong> — Invite them to become an IOH-certified blood testing practitioner themselves. Best for health coaches, personal trainers, and practitioners with large followings who could also sell certifications to their own audience.'
+};
+
+function selectStrategy(s){
+  document.getElementById('appr-strategy').value=s;
+  document.querySelectorAll('.strategy-card').forEach(function(c){
+    c.classList.toggle('active',c.dataset.strategy===s);
+  });
+  var ctx=document.getElementById('strategy-context');
+  if(ctx) ctx.innerHTML=STRATEGY_CONTEXT[s]||'';
+  // Clear copy so user regenerates with new strategy
+  document.getElementById('appr-copy').value='';
+  document.getElementById('appr-subject').value='';
+}
+
+function initStrategyContext(){
+  var ctx=document.getElementById('strategy-context');
+  if(ctx) ctx.innerHTML=STRATEGY_CONTEXT['podcast-invite'];
+}
+
+function refreshApprPreview(){
+  if(approveIdx===null)return;
+  var r=INF[approveIdx];
+  var firstName=(r.name||'[Name]').split(' ')[0];
+  var fullName=r.name||'[Name]';
+  var hook=document.getElementById('appr-hook').value;
+  var angles=document.getElementById('appr-angles').value;
+  var know=document.getElementById('appr-know').value;
+  var niche=r.niche||'health and performance';
+  var deal=r.dealType||'partnership';
+  var strategy=document.getElementById('appr-strategy').value||'podcast-invite';
+  var hasPodcast=!!(r.podcastUrl&&r.podcastUrl.length>0);
+  var p=getActiveProfile();
+  var senderName=p?p.name:'Wade Foxx';
+  var senderSig=p?p.sig:'Wade Foxx | Institute Of Health | instituteofhealth.com';
+  var body='', subject='';
+  var hookLine=hook||generateHook(r);
+  var connLine=know?'\n\nFor context — '+know:'';
+  var anglesLine=angles?'\n\n'+angles:'';
+
+  if(strategy==='podcast-invite'){
+    var mutualLine=hasPodcast?'\n\nAnd if it works both ways — Wade would love to come on your show too. We can make it a genuine exchange.':'';
+    body='Hey '+firstName+',\n\n'+hookLine+connLine+'\n\n'
+      +'We\'re launching the IOH (Institute Of Health) podcast later this year and we\'re locking in guests now. We already have 12 confirmed longevity and biohacking experts on the roster — and based on your work in '+(niche.split('/')[0].trim())+', I think you\'d be a perfect fit for the show.\n\n'
+      +'The IOH podcast is focused on the front edge of longevity, performance and what elite health actually looks like — no fluff, just substantive conversations with people who are operating at the highest level in this space.'
+      +mutualLine+anglesLine+'\n\n'
+      +'Happy to jump on a 15-minute call to walk you through what we\'re building and see if it\'s a fit.\n\n'
+      +'— '+senderName+'\n'+senderSig;
+    subject='IOH Podcast — '+firstName+', would love to have you on the show';
+
+  } else if(strategy==='podcast-guest'){
+    body='Hey '+firstName+',\n\n'+hookLine+connLine+'\n\n'
+      +'I\'d love to pitch Jake as a guest on your show. He\'s the founder of IOH (Institute Of Health) — a science-backed longevity and blood testing program — and he has a strong angle for your audience around '
+      +(angles||'what the data actually says about longevity performance, and what happens when you apply that systematically with real cohorts.')+'\n\n'
+      +'Not just theory — Jake has been in the trenches running structured protocols with real clients and has the outcomes data to back it up.\n\n'
+      +'Worth a quick conversation to see if there\'s a fit?\n\n'
+      +'— '+senderName+'\n'+senderSig;
+    subject='Guest pitch — Jake from Institute Of Health for your show';
+
+  } else if(strategy==='ambassador'){
+    body='Hey '+firstName+',\n\n'+hookLine+connLine+'\n\n'
+      +'IOH — Institute Of Health — is a science-backed longevity and blood testing certification program. Your audience aligns strongly with what we\'re building and I think there\'s a genuine partnership worth exploring.'
+      +anglesLine+'\n\n'
+      +'Worth a 10-minute call to explore what a collaboration could look like?\n\n'
+      +'— '+senderName+'\n'+senderSig;
+    subject='IOH x '+firstName+' — Partnership';
+
+  } else if(strategy==='cert'){
+    body='Hey '+firstName+',\n\n'+hookLine+connLine+'\n\n'
+      +'Reaching out because the IOH blood testing certification program is something I think could genuinely add to what you\'re already doing — both for yourself and potentially for the practitioners or coaches who follow your work.\n\n'
+      +'The cert trains health professionals to interpret functional blood panels at a clinical level. We\'re seeing trainers and coaches use it to completely transform how they work with clients — and many are also selling it on to their own networks.'
+      +anglesLine+'\n\n'
+      +'Happy to send through the details and have a quick call if there\'s interest.\n\n'
+      +'— '+senderName+'\n'+senderSig;
+    subject='IOH Blood Testing Certification — '+firstName+', thought this might be relevant';
+  }
+
+  document.getElementById('appr-copy').value=body;
+  var subjEl=document.getElementById('appr-subject');
+  if(subjEl&&!subjEl.value) subjEl.value=subject;
+}
+
+function generateHook(r){
+  // Generate a specific, high-quality hook based on their niche
+  var niche=(r.niche||'').toLowerCase();
+  var name=r.name||'';
+  if(niche.includes('hyrox')||niche.includes('fitness perform')) return 'The way you approach performance training for Hyrox athletes is exactly the kind of rigorous, measurable methodology we want to bring to longevity and blood testing.';
+  if(niche.includes('biohack')||niche.includes('blood test')) return 'Your work on biohacking and blood-based performance sits right at the centre of what IOH is about — it\'s rare to see someone in your position who genuinely understands the data.';
+  if(niche.includes('longevity')) return 'I\'ve been following your work on longevity for a while — the angle you take cuts through the noise in a way most content in this space doesn\'t.';
+  if(niche.includes('functional medicine')||niche.includes('functional nutrition')) return 'Your approach to functional medicine is exactly what practitioners need more of — evidence-based, practical, and outcomes-focused.';
+  if(niche.includes('hormone')||niche.includes('women')) return 'The way you cover women\'s hormonal health is more clinically grounded than almost anything else I\'ve seen in this space.';
+  if(niche.includes('brain')||niche.includes('cognit')||niche.includes('neuroscience')) return 'Your content on brain health and cognitive performance sits right at the intersection of what our highest-performing clients are trying to optimise.';
+  if(niche.includes('entrepreneur')||niche.includes('mindset')||niche.includes('performance')) return 'The audience you\'ve built is exactly the kind of high-performer who needs to hear the IOH story — people who optimise everything except their own biology.';
+  if(niche.includes('podcast')) return 'Your show is one of the few that goes deep enough to actually be useful — the audience you\'ve built clearly values substance over noise.';
+  return 'I came across your work on '+((r.niche||'health and performance').split('/')[0].trim())+' and it stood out immediately as aligned with what IOH is doing.';
+}
+
+function clearApprCopy(){
+  document.getElementById('appr-copy').value='';
+  document.getElementById('appr-subject').value='';
+}
+
+function saveApprovalNotes(approve){
+  if(approveIdx===null)return;
+  var r=INF[approveIdx];
+  r.hook=document.getElementById('appr-hook').value.trim();
+  r.know=document.getElementById('appr-know').value.trim();
+  r.angles=document.getElementById('appr-angles').value.trim();
+  r.cta=document.getElementById('appr-cta').value;
+  r.temp=document.getElementById('appr-temp').value;
+  // Save the edited email copy and subject
+  r.approvedCopy=document.getElementById('appr-copy').value.trim();
+  r.approvedSubject=document.getElementById('appr-subject').value.trim();
+  // Save which email profile was active when approved
+  var p=getActiveProfile();
+  r.approvedProfile=p?{email:p.email,name:p.name,label:p.label,sig:p.sig}:null;
+  r.approvedStrategy=document.getElementById('appr-strategy').value||'podcast-invite';
+  if(approve){
+    r.outreachState='approved';
+    r.status='📤 Approved for Outreach';
+    toast('✅ Approved — agent will draft on next run');
+  } else {
+    toast('Notes saved ✓');
+  }
+  sv();cM('mo-approve');renderQueue();renderInf();
+}
+
+function unapprove(idx){
+  INF[idx].outreachState='';
+  INF[idx].status='✅ CONFIRMED';
+  sv();renderQueue();toast('Moved back to Awaiting Approval');
+}
+
+// INIT
+buildStatusFilter();
+// Auto-sync contact details into localStorage data on first load
+if(!localStorage.getItem(LS_CSYNC)){var wasSynced=syncContacts();if(wasSynced)toast('Contact details loaded for '+INF.length+' influencers ✓');}
+initOv();renderInf();renderPod();updateEmailBar();
+</script>
+</body>
+</html>
