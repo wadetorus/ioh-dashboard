@@ -1,0 +1,53 @@
+{
+  "last_updated": "2026-04-14T22:54:01.626392",
+  "agents": {
+    "ioh-outreach-pipeline": {
+      "name": "Outreach Pipeline",
+      "schedule": "Tue & Thu \u2014 8:00 AM",
+      "next_run": "Tomorrow (Tue 15 Apr)",
+      "last_run": null,
+      "status": "idle",
+      "last_summary": "Not yet run \u2014 waiting for first execution",
+      "stats": {
+        "drafted": 0,
+        "skipped": 0
+      }
+    },
+    "ioh-followup-agent": {
+      "name": "Follow-Up Agent",
+      "schedule": "Wednesday \u2014 9:00 AM",
+      "next_run": "Wed 16 Apr",
+      "last_run": null,
+      "status": "idle",
+      "last_summary": "Not yet run \u2014 waiting for first execution",
+      "stats": {
+        "followup1": 0,
+        "followup2": 0
+      }
+    },
+    "ioh-weekly-ops": {
+      "name": "Weekly Ops",
+      "schedule": "Monday \u2014 7:30 AM",
+      "next_run": "Mon 20 Apr",
+      "last_run": null,
+      "status": "idle",
+      "last_summary": "Not yet run \u2014 waiting for first execution",
+      "stats": {
+        "tasks_updated": 0,
+        "doc_refreshed": false
+      }
+    },
+    "ioh-prospecting-agent": {
+      "name": "Prospecting Agent",
+      "schedule": "Friday \u2014 10:00 AM",
+      "next_run": "Fri 18 Apr",
+      "last_run": null,
+      "status": "idle",
+      "last_summary": "Not yet run \u2014 waiting for first execution",
+      "stats": {
+        "added": 0
+      }
+    }
+  },
+  "runs": []
+}
