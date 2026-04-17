@@ -1111,7 +1111,7 @@ function getStatuses(){return JSON.parse(localStorage.getItem(LS_STAT)||'null')|
 function saveStatuses(arr){localStorage.setItem(LS_STAT,JSON.stringify(arr));}
 function buildStatusFilter(){
   var sel=document.getElementById('istatus');if(!sel)return;
-  var cur=sel.value;sel.innerHTML='<option value="">All Statuses</option>';
+  var cur=sel.value;sel.innerHTML='<option value="">All Statuses</option><option value="__agent__"'+(cur==='__agent__'?' selected':'')+'>🆕 Agent Added</option>';
   getStatuses().forEach(function(s){sel.innerHTML+='<option value="'+s+'"'+(cur===s?' selected':'')+'>'+s+'</option>';});
 }
 function openManageStatuses(){
@@ -1157,7 +1157,8 @@ function renderInf(){
     if(showArchived)return r.archived===true;
     if(r.archived)return false;
     var tx=((r.name||'')+(r.handle||'')+(r.niche||'')+(r.notes||'')+(r.dealType||'')+(r.hook||'')).toLowerCase();
-    return(!q||tx.includes(q))&&(!fc||(r.country||'').includes(fc))&&(!fs||r.status===fs);
+    var statusMatch=!fs||(fs==='__agent__'?r.addedSource==='agent':r.status===fs);
+    return(!q||tx.includes(q))&&(!fc||(r.country||'').includes(fc))&&statusMatch;
   });
   // Sort logic — dropdown overrides column header sort
   var sortSel=(document.getElementById('isort')||{}).value||'default';
