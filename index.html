@@ -949,25 +949,33 @@ function exportSyncFile(){
   toast('crm_data.json downloaded — move to your Projects/MrFoxx - IOH folder then run deploy script');
 }
 
-// On load: try to fetch crm_data.json (works when hosted on GitHub Pages)
-// If found, it overrides localStorage — all viewers see the same synced data
+// On load: fetch crm_data.json — authoritative source for all viewers
+// Overrides localStorage so all devices see the same data after a sync push
 (function loadCrmSync(){
   fetch('crm_data.json?t='+Date.now())
     .then(function(r){if(!r.ok)throw new Error('no file');return r.json();})
     .then(function(d){
-      if(d&&d.influencers&&Array.isArray(d.influencers)){
-        INF=d.influencers;
-        localStorage.setItem(LS_I,JSON.stringify(INF));
+      var updated=false;
+      if(d&&d.influencers&&Array.isArray(d.influencers)){INF=d.influencers;localStorage.setItem(LS_I,JSON.stringify(INF));updated=true;}
+      if(d&&d.podcasts&&Array.isArray(d.podcasts)){POD=d.podcasts;localStorage.setItem(LS_P,JSON.stringify(POD));updated=true;}
+      if(updated){
+        // Re-render the currently visible page so changes show immediately
+        setTimeout(function(){
+          var ap=document.querySelector('.page.active');
+          if(!ap)return;
+          var id=ap.id;
+          if(id==='page-influencers')renderInf();
+          else if(id==='page-overview'){updBanner();renderFunnel('funnel');loadLog();}
+          else if(id==='page-agents'){updBanner();renderFunnel('ag-funnel');loadLog();}
+          else if(id==='page-podcasts')renderPod();
+          else if(id==='page-queue'){updateEmailBar();renderQueue();}
+          // Show sync badge in header
+          var sb=document.getElementById('sync-btn');
+          if(sb){sb.classList.remove('pulse');sb.textContent='✓ Synced '+(d.exported?new Date(d.exported).toLocaleDateString('en-AU',{day:'numeric',month:'short'}):'');}
+        },300);
       }
-      if(d&&d.podcasts&&Array.isArray(d.podcasts)){
-        POD=d.podcasts;
-        localStorage.setItem(LS_P,JSON.stringify(POD));
-      }
-      console.log('[IOH] Loaded synced data from crm_data.json ('+new Date(d.exported).toLocaleString()+')');
     })
-    .catch(function(){
-      // No crm_data.json yet — fine, use localStorage/SEED
-    });
+    .catch(function(){/* no crm_data.json yet — use localStorage/SEED */});
 })();
 // ── CONTACT SYNC (merges researched contacts into live localStorage data) ─────
 var LS_CSYNC='ioh_contacts_synced_v2';
