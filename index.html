@@ -210,7 +210,7 @@ tbody td{padding:9px 12px;font-size:12px;color:var(--grl);vertical-align:middle;
   </div>
   <div class="hright" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
     <div style="display:flex;align-items:center;gap:8px;">
-      <button id="sync-btn" class="sync-btn" onclick="exportSyncFile()" title="Download crm_data.json then run deploy script to push live">⬆ Export & Sync</button>
+      <button id="sync-btn" class="sync-btn" onclick="syncOrSetup()" title="Auto-sync to GitHub">🔄 Setup Sync</button>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <div class="htime" id="clock">--:--</div>
@@ -663,6 +663,25 @@ tbody td{padding:9px 12px;font-size:12px;color:var(--grl);vertical-align:middle;
   </div>
 </div>
 
+<!-- SYNC SETUP MODAL -->
+<div class="mo" id="mo-sync">
+  <div class="md" style="max-width:440px;">
+    <div class="mhead"><h2>Auto-Sync Setup</h2><button class="mclose" onclick="cM('mo-sync')">&#x2715;</button></div>
+    <div style="padding:22px 24px;">
+      <div style="font-size:12px;color:#888;margin-bottom:18px;line-height:1.6;">Enter your GitHub token once per device. Changes will sync automatically to all viewers — no export or deploy needed.</div>
+      <label style="font-size:11px;color:#666;display:block;margin-bottom:4px;">GitHub Token</label>
+      <input id="sync-token-input" type="password" class="sbox" style="width:100%;margin-bottom:12px;" placeholder="ghp_...">
+      <label style="font-size:11px;color:#666;display:block;margin-bottom:4px;">Repo Name</label>
+      <input id="sync-repo-input" class="sbox" style="width:100%;margin-bottom:18px;" value="ioh-dashboard">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button onclick="saveSyncConfig()" style="background:var(--gl);color:#000;border:none;padding:8px 20px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;">Save & Test Connection</button>
+        <button onclick="clearSyncConfig()" style="background:none;border:1px solid #2A2A2A;color:#666;padding:8px 14px;border-radius:4px;font-size:12px;cursor:pointer;">Clear Token</button>
+      </div>
+      <div id="sync-test-result" style="margin-top:12px;font-size:11px;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- INF MODAL -->
 <div class="mo" id="mo-inf">
   <div class="md">
@@ -928,56 +947,178 @@ let POD=JSON.parse(localStorage.getItem(LS_P)||'null')||JSON.parse(JSON.stringif
 let eI=null,eP=null,sI={k:'country',d:1},sP={k:'priority',d:1};
 INF.forEach(function(r){if(!r.hook)r.hook='';if(!r.angles)r.angles='';if(!r.cta)r.cta='';if(!r.know)r.know='';if(!r.personal)r.personal='';if(!r.prior)r.prior='';if(!r.temp)r.temp='cold';});
 POD.forEach(function(r){if(!r.hook)r.hook='';if(!r.points)r.points='';if(!r.know)r.know='';if(!r.prior2)r.prior2='';if(!r.temp)r.temp='cold';});
+// ── AUTO-SYNC ──────────────────────────────────────────────────────
+var LS_GH_TOKEN='ioh_gh_token_v1';
+var LS_GH_REPO='ioh_gh_repo_v1';
+var LS_GH_USER='ioh_gh_user_v1';
+var syncTimer=null;
+var lastPushedAt='';
+
+function setSyncBtn(txt,pulse){
+  var b=document.getElementById('sync-btn');
+  if(!b)return;
+  b.textContent=txt;
+  b.className='sync-btn'+(pulse?' pulse':'');
+}
+
+function syncOrSetup(){
+  if(localStorage.getItem(LS_GH_TOKEN))pushToGitHub();
+  else openSyncSetup();
+}
+
+function openSyncSetup(){
+  var mo=document.getElementById('mo-sync');
+  if(!mo)return;
+  document.getElementById('sync-token-input').value=localStorage.getItem(LS_GH_TOKEN)||'';
+  document.getElementById('sync-repo-input').value=localStorage.getItem(LS_GH_REPO)||'ioh-dashboard';
+  document.getElementById('sync-test-result').innerHTML='';
+  mo.style.display='flex';
+}
+
+function saveSyncConfig(){
+  var tok=document.getElementById('sync-token-input').value.trim();
+  var repo=document.getElementById('sync-repo-input').value.trim()||'ioh-dashboard';
+  if(!tok){document.getElementById('sync-test-result').innerHTML='<span style="color:#F5A5A0;">Enter a token first.</span>';return;}
+  localStorage.setItem(LS_GH_TOKEN,tok);
+  localStorage.setItem(LS_GH_REPO,repo);
+  localStorage.removeItem(LS_GH_USER);
+  document.getElementById('sync-test-result').innerHTML='<span style="color:#888;">Testing…</span>';
+  fetch('https://api.github.com/user',{headers:{Authorization:'token '+tok}})
+    .then(function(r){return r.json();})
+    .then(function(u){
+      if(!u.login)throw new Error('bad token');
+      localStorage.setItem(LS_GH_USER,u.login);
+      document.getElementById('sync-test-result').innerHTML='<span style="color:#5ACA7A;">✓ Connected as '+u.login+' — auto-sync active</span>';
+      setTimeout(function(){cM('mo-sync');setSyncBtn('🔄 Sync Now','');pushToGitHub();},1200);
+    })
+    .catch(function(){
+      document.getElementById('sync-test-result').innerHTML='<span style="color:#F5A5A0;">✗ Token invalid or no network access. Check and retry.</span>';
+    });
+}
+
+function clearSyncConfig(){
+  localStorage.removeItem(LS_GH_TOKEN);localStorage.removeItem(LS_GH_REPO);localStorage.removeItem(LS_GH_USER);
+  document.getElementById('sync-test-result').innerHTML='<span style="color:#888;">Token cleared.</span>';
+  setSyncBtn('⚙ Setup Sync','');
+}
+
+function pushToGitHub(){
+  var tok=localStorage.getItem(LS_GH_TOKEN);
+  var repo=localStorage.getItem(LS_GH_REPO)||'ioh-dashboard';
+  var user=localStorage.getItem(LS_GH_USER);
+  if(!tok){openSyncSetup();return;}
+  setSyncBtn('🔄 Syncing…','');
+  var doPush=function(u){
+    var data={version:2,exported:new Date().toISOString(),influencers:INF,podcasts:POD,feedback:getFeedback()};
+    var content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
+    fetch('https://api.github.com/repos/'+u+'/'+repo+'/contents/crm_data.json',{headers:{Authorization:'token '+tok}})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(ex){
+        var body={message:'IOH sync '+new Date().toISOString(),content:content};
+        if(ex&&ex.sha)body.sha=ex.sha;
+        return fetch('https://api.github.com/repos/'+u+'/'+repo+'/contents/crm_data.json',{method:'PUT',headers:{Authorization:'token '+tok,'Content-Type':'application/json'},body:JSON.stringify(body)});
+      })
+      .then(function(r){
+        if(!r.ok)throw new Error('push '+r.status);
+        var now=new Date();
+        lastPushedAt=now.toISOString();
+        setSyncBtn('✓ '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),'');
+      })
+      .catch(function(e){
+        setSyncBtn('⚠ Sync failed','pulse');
+        toast('Sync failed — check your token in Sync settings');
+        console.error('Sync:',e);
+      });
+  };
+  if(user){doPush(user);}
+  else{
+    fetch('https://api.github.com/user',{headers:{Authorization:'token '+tok}})
+      .then(function(r){return r.json();})
+      .then(function(u){localStorage.setItem(LS_GH_USER,u.login);doPush(u.login);})
+      .catch(function(){setSyncBtn('⚙ Setup Sync','pulse');toast('Token invalid — click Sync to reconfigure');localStorage.removeItem(LS_GH_TOKEN);});
+  }
+}
+
+function scheduleSync(){
+  if(!localStorage.getItem(LS_GH_TOKEN))return;
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(pushToGitHub,4000);
+}
+
 function sv(){
   localStorage.setItem(LS_I,JSON.stringify(INF));
   localStorage.setItem(LS_P,JSON.stringify(POD));
-  // Mark unsaved changes
-  var btn=document.getElementById('sync-btn');
-  if(btn){btn.classList.add('pulse');btn.textContent='⬆ Export & Sync *';}
+  if(localStorage.getItem(LS_GH_TOKEN)){setSyncBtn('● Pending…','pulse');scheduleSync();}
+  else setSyncBtn('⚙ Setup Sync','pulse');
 }
 
-function exportSyncFile(){
-  var data={version:2,exported:new Date().toISOString(),influencers:INF,podcasts:POD,feedback:getFeedback()};
-  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='crm_data.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  var btn=document.getElementById('sync-btn');
-  if(btn){btn.classList.remove('pulse');btn.textContent='⬆ Export & Sync';}
-  toast('crm_data.json downloaded — move to your Projects/MrFoxx - IOH folder then run deploy script');
+// ── INITIAL LOAD + AUTO-POLL ───────────────────────────────────────
+var lastFetchedExported='';
+
+function applyRemoteData(d){
+  if(!d||d.exported===lastFetchedExported)return false;
+  // Don't overwrite data we just pushed ourselves
+  if(d.exported===lastPushedAt)return false;
+  lastFetchedExported=d.exported;
+  var updated=false;
+  if(d.influencers&&Array.isArray(d.influencers)){INF=d.influencers;localStorage.setItem(LS_I,JSON.stringify(INF));updated=true;}
+  if(d.podcasts&&Array.isArray(d.podcasts)){POD=d.podcasts;localStorage.setItem(LS_P,JSON.stringify(POD));updated=true;}
+  if(d.feedback&&Array.isArray(d.feedback))saveFeedback(d.feedback);
+  return updated;
 }
 
-// On load: fetch crm_data.json — authoritative source for all viewers
-// Overrides localStorage so all devices see the same data after a sync push
+function reRenderActive(){
+  var ap=document.querySelector('.page.active');if(!ap)return;
+  var id=ap.id;
+  if(id==='page-influencers')renderInf();
+  else if(id==='page-overview'){updBanner();renderFunnel('funnel');loadLog();}
+  else if(id==='page-agents'){updBanner();renderFunnel('ag-funnel');loadLog();}
+  else if(id==='page-podcasts')renderPod();
+  else if(id==='page-queue'){updateEmailBar();renderQueue();}
+}
+
 (function loadCrmSync(){
   fetch('crm_data.json?t='+Date.now())
     .then(function(r){if(!r.ok)throw new Error('no file');return r.json();})
     .then(function(d){
-      var updated=false;
-      if(d&&d.influencers&&Array.isArray(d.influencers)){INF=d.influencers;localStorage.setItem(LS_I,JSON.stringify(INF));updated=true;}
-      if(d&&d.podcasts&&Array.isArray(d.podcasts)){POD=d.podcasts;localStorage.setItem(LS_P,JSON.stringify(POD));updated=true;}
-      if(d&&d.feedback&&Array.isArray(d.feedback)){saveFeedback(d.feedback);}
+      var updated=applyRemoteData(d);
+      setTimeout(function(){
+        if(updated)reRenderActive();
+        var sb=document.getElementById('sync-btn');
+        if(sb){
+          if(localStorage.getItem(LS_GH_TOKEN)){
+            var now=d&&d.exported?new Date(d.exported):new Date();
+            sb.textContent='✓ '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+            sb.className='sync-btn';
+          } else {
+            sb.textContent='⚙ Setup Sync';sb.className='sync-btn pulse';
+          }
+        }
+      },400);
+    })
+    .catch(function(){
+      // No crm_data.json — show setup prompt if no token
+      setTimeout(function(){
+        if(!localStorage.getItem(LS_GH_TOKEN))setSyncBtn('⚙ Setup Sync','pulse');
+      },400);
+    });
+})();
+
+// Auto-poll every 60 seconds — picks up changes pushed from other devices
+setInterval(function(){
+  fetch('crm_data.json?t='+Date.now())
+    .then(function(r){if(!r.ok)throw new Error();return r.json();})
+    .then(function(d){
+      var updated=applyRemoteData(d);
       if(updated){
-        // Re-render the currently visible page so changes show immediately
-        setTimeout(function(){
-          var ap=document.querySelector('.page.active');
-          if(!ap)return;
-          var id=ap.id;
-          if(id==='page-influencers')renderInf();
-          else if(id==='page-overview'){updBanner();renderFunnel('funnel');loadLog();}
-          else if(id==='page-agents'){updBanner();renderFunnel('ag-funnel');loadLog();}
-          else if(id==='page-podcasts')renderPod();
-          else if(id==='page-queue'){updateEmailBar();renderQueue();}
-          // Show sync badge in header
-          var sb=document.getElementById('sync-btn');
-          if(sb){sb.classList.remove('pulse');sb.textContent='✓ Synced '+(d.exported?new Date(d.exported).toLocaleDateString('en-AU',{day:'numeric',month:'short'}):'');}
-        },300);
+        reRenderActive();
+        var now=new Date(d.exported);
+        setSyncBtn('✓ '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),'');
+        toast('Dashboard updated from another device');
       }
     })
-    .catch(function(){/* no crm_data.json yet — use localStorage/SEED */});
-})();
+    .catch(function(){});
+},60000);
 // ── CONTACT SYNC (merges researched contacts into live localStorage data) ─────
 var LS_CSYNC='ioh_contacts_synced_v2';
 var CONTACT_LOOKUP=[{"handle": "mmoorefit", "name": "Ollie Moore", "email": "Moorefitness2022@gmail.com", "phone": "", "website": "linktr.ee/mmoorefit", "contactSource": "website"}, {"handle": "christiewhitehill", "name": "Christie Whitehill", "email": "christie@intuwellness.com", "phone": "", "website": "intuwellness.com", "contactSource": "Intu Wellness (co-founder)"}, {"handle": "nickbellau", "name": "Nick Bell", "email": "info@saxton.com.au", "phone": "1300 799 823", "website": "nick-bell.com", "contactSource": "Saxton Speakers Australia (booking agency)"}, {"handle": "jonocastanoacero", "name": "Jono Castano", "email": "james@neonmgmt.com", "phone": "", "website": "acerotrainingseries.com", "contactSource": "management (Neon Mgmt)"}, {"handle": "tashfriedman", "name": "Natasha Friedman", "email": "natasha@myfunctionalfill.com", "phone": "", "website": "myfunctionalfill.com", "contactSource": "digital practice"}, {"handle": "mrtimrobards", "name": "Tim Robards", "email": "contact@endorsco.com", "phone": "", "website": "endorsco.com", "contactSource": "management (Endorse Co)"}, {"handle": "jeremyjcabral", "name": "Jeremy Cabral", "email": "jeremy@finder.com", "phone": "+61 2 9155 7800", "website": "finder.com.au", "contactSource": "company directory"}, {"handle": "erinvholland", "name": "Erin Holland", "email": "mb@atarimae.agency", "phone": "", "website": "atarimae.agency", "contactSource": "management (Atarimae Agency)"}, {"handle": "mark_bouris", "name": "Mark Bouris", "email": "contact@endorsco.com", "phone": "", "website": "markbouris.com.au", "contactSource": "management (Endorse Co)"}, {"handle": "drbradburton", "name": "Dr Brad Borton", "email": "", "phone": "", "website": "", "contactSource": "not found"}, {"handle": "laynebuckley", "name": "Layne Buckley", "email": "", "phone": "", "website": "", "contactSource": "not found"}, {"handle": "drgabrielleleone", "name": "Dr Gabrielle Leone", "email": "strong@drgabriellelyon.com", "phone": "", "website": "drgabriellelyon.com", "contactSource": "official website (corrected)"}, {"handle": "thehealthcode_au", "name": "The Health Code", "email": "hello@twopalms.com.au", "phone": "+61 478 536 312", "website": "", "contactSource": "Two Palms Media (Kurt Tilse/Sarah's Day management)"}, {"handle": "drchatterjee", "name": "Dr Rangan Chatterjee", "email": "info@drchatterjee.com", "phone": "", "website": "drchatterjee.com", "contactSource": "official website verified"}, {"handle": "doctors_kitchen", "name": "Dr Rupy Aujla", "email": "enquiries@bevjames.com", "phone": "", "website": "thedoctorskitchen.com", "contactSource": "Bev James Management (speaking engagements)"}, {"handle": "angelafosterperformance", "name": "Angela Foster", "email": "angela@angelafosterperformance.com", "phone": "", "website": "angelafosterperformance.com", "contactSource": "official website verified"}, {"handle": "theoptimalperformance", "name": "Dr Tommy Wood", "email": "", "phone": "1-800-698-2536", "website": "drtommywood.com", "contactSource": "All American Speakers / Performance Insights UK"}, {"handle": "drandrewsteele", "name": "Dr Andrew Steele", "email": "statto@andrewsteele.co.uk", "phone": "", "website": "andrewsteele.co.uk", "contactSource": "LinkedIn / website (rapid reply confirmed)"}, {"handle": "maxlugavere", "name": "Max Lugavere", "email": "contact@maxlugavere.com", "phone": "", "website": "maxlugavere.com", "contactSource": "website / booking agent"}, {"handle": "simonhillnutrition", "name": "Simon Hill", "email": "simon@theproof.com", "phone": "", "website": "theproof.com", "contactSource": "official website verified"}, {"handle": "bengreenfieldlife", "name": "Ben Greenfield", "email": "ben@bengreenfieldfitness.com", "phone": "1-877-209-9439", "website": "bengreenfieldlife.com", "contactSource": "official website verified"}, {"handle": "drmarkhyman", "name": "Dr Mark Hyman", "email": "support@drhyman.com", "phone": "888-702-2995", "website": "drhyman.com", "contactSource": "official website verified"}, {"handle": "hubermanlab", "name": "Andrew Huberman", "email": "info@hubermanlab.com", "phone": "+1 650-723-2465", "website": "hubermanlab.com", "contactSource": "official website verified"}, {"handle": "davidsinclairphd", "name": "David Sinclair", "email": "david_sinclair@hms.harvard.edu", "phone": "", "website": "davidasinclair.com", "contactSource": "Harvard Medical School directory"}, {"handle": "peterattiamd", "name": "Peter Attia", "email": "billing@peterattiamd.com", "phone": "", "website": "peterattiamd.com", "contactSource": "official website"}, {"handle": "drhyman", "name": "Dr Mark Hyman", "email": "contact@ultrawellnesscenter.com", "phone": "+1 413-637-9991", "website": "ultrawellnesscenter.com", "contactSource": "Ultra Wellness Center"}, {"handle": "foundmyfitness", "name": "Dr Rhonda Patrick", "email": "", "phone": "1-800-698-2536", "website": "foundmyfitness.com", "contactSource": "AAE Speakers Bureau (use contact form on website)"}, {"handle": "briandjohnson", "name": "Bryan Johnson", "email": "support@bryanjohnson.com", "phone": "", "website": "blueprint.bryanjohnson.com", "contactSource": "official website verified"}, {"handle": "garyvee", "name": "Gary Vaynerchuk", "email": "gary@vaynermedia.com", "phone": "", "website": "garyvaynerchuk.com", "contactSource": "official website + X/Twitter"}, {"handle": "lewishowes", "name": "Lewis Howes", "email": "lewis@greatness.com", "phone": "+1 614-350-3960", "website": "lewishowes.com", "contactSource": "official team email (corrected from contact@lewishowes.com)"}, {"handle": "drmindypelz", "name": "Dr Mindy Pelz", "email": "info@drmindypelz.com", "phone": "+1 408-298-8092", "website": "drmindypelz.com", "contactSource": "official website verified"}, {"handle": "jimkwik", "name": "Jim Kwik", "email": "contact@jimkwik.com", "phone": "", "website": "jimkwik.com", "contactSource": "official website verified"}, {"handle": "a.glimpse.of.amelia", "name": "Amelia (A Glimpse of Amelia)", "email": "Amelia@agoa.com.au", "phone": "", "website": "agoa.com.au", "contactSource": "official website verified"}, {"handle": "garybrecka", "name": "Gary Brecka", "email": "contact@theultimatehuman.com", "phone": "+1 239-325-9645", "website": "theultimatehuman.com", "contactSource": "The Ultimate Human website"}, {"handle": "dave.asprey", "name": "Dave Asprey", "email": "david@asprey.net", "phone": "+1 408-887-1505", "website": "daveasprey.com", "contactSource": "official website verified"}, {"handle": "cbum", "name": "Chris Bumstead", "email": "christopher.bumstead@gmail.com", "phone": "", "website": "cbumfitness.com", "contactSource": "ContactOut / MN2S booking agency"}, {"handle": "dr.amybkillen", "name": "Dr Amy Killen", "email": "amybkillen@gmail.com", "phone": "", "website": "dramykillen.com", "contactSource": "online sources"}, {"handle": "nathalieniddam", "name": "Nathalie Niddam", "email": "nathalie@nathalieniddam.com", "phone": "+1 929-589-1440", "website": "natniddam.com", "contactSource": "website"}, {"handle": "steven", "name": "Steven Bartlett", "email": "commercial@stevenbartlett.com", "phone": "", "website": "stevenbartlett.com", "contactSource": "official website + LinkedIn verified"}, {"handle": "melrobbins", "name": "Mel Robbins", "email": "hello@melrobbins.com", "phone": "+1 855-827-9635", "website": "melrobbins.com", "contactSource": "official website verified"}, {"handle": "lowtoxlife", "name": "Alexx Stuart", "email": "hello@lowtoxlife.com", "phone": "", "website": "lowtoxlife.com", "contactSource": "official contact page (corrected from contact@)"}, {"handle": "drkarafitzgerald", "name": "Dr Kara Fitzgerald", "email": "frontdesk@drkarafitzgerald.com", "phone": "+1 203-304-9502", "website": "drkarafitzgerald.com", "contactSource": "clinic contact page verified"}, {"handle": "d_alec_zeck", "name": "Alec Zeck", "email": "hello@thewayfwrd.com", "phone": "", "website": "thewayfwrd.com", "contactSource": "official website verified"}, {"handle": "bernadette.abraham", "name": "Bernadette Abraham", "email": "Bernadette@BernadetteAbraham.com", "phone": "", "website": "bernadetteabraham.com", "contactSource": "official website verified"}, {"handle": "pjharlowwellness", "name": "PJ Harlow", "email": "pjharlowwellness@gmail.com", "phone": "+1 302-236-5509", "website": "pjharlowwellness.com", "contactSource": "official website verified"}, {"handle": "dr.jess.md", "name": "Dr Jessica Peatross", "email": "support@drjessmd.com", "phone": "", "website": "drjessmd.com", "contactSource": "official website verified"}, {"handle": "healingcavelady", "name": "Mary Darnall", "email": "healingcavelady@gmail.com", "phone": "", "website": "healingcavelady.com", "contactSource": "official website verified"}, {"handle": "drjeffreybland", "name": "Dr Jeffrey Bland", "email": "jeffbland@bigboldhealth.com", "phone": "+1 206-201-3794", "website": "bigboldhealth.com", "contactSource": "official website (corrected from trisheury@)"}, {"handle": "dr.williamwallace", "name": "Dr William Wallace", "email": "", "phone": "", "website": "drwilliamwallace.com", "contactSource": "Instagram DM @dr.williamwallace (no public email)"}, {"handle": "tonymcaleavey", "name": "Tony McAleavey", "email": "", "phone": "", "website": "tonymcaleaveyfitness.com", "contactSource": "Instagram DM @tonymcaleavey (company dissolved 2024)"}, {"handle": "hattieboydle", "name": "Hattie Boydle", "email": "Hattieboydlept@gmail.com", "phone": "+61 2 418 406 955", "website": "hattieboydle.com.au", "contactSource": "official website verified"}, {"handle": "itscoachgoodman", "name": "Jonathan Goodman", "email": "Jonathan@theptdc.com", "phone": "", "website": "jonathangoodman.com", "contactSource": "PTDC website verified"}, {"handle": "drjohnberardi", "name": "Dr John Berardi", "email": "info@precisionnutrition.com", "phone": "1-877-660-6464", "website": "precisionnutrition.com", "contactSource": "Precision Nutrition company contact"}, {"handle": "sarahkleinerwellness", "name": "Sarah Kleiner", "email": "sarah@sarahkleinerwellness.com", "phone": "", "website": "sarahkleinerwellness.com", "contactSource": "website verified"}, {"handle": "doc_amen", "name": "Dr Daniel Amen", "email": "nbuchoz@amenclinic.com", "phone": "+1 855-421-5425", "website": "danielamenmd.com", "contactSource": "Amen Clinics management verified"}, {"handle": "paulsaladinomd", "name": "Dr Paul Saladino", "email": "info@paulsaladinomd.co", "phone": "", "website": "paulsaladinomd.com", "contactSource": "official website verified"}, {"handle": "kashkhanofficial", "name": "Kashif Khan", "email": "kashif@thednacompany.com", "phone": "+1 416-622-6800", "website": "kashkhanofficial.com", "contactSource": "DNA Company verified"}, {"handle": "bengreenfieldfitness", "name": "Ben Greenfield (Fitness)", "email": "support@bengreenfieldlife.com", "phone": "1-877-209-9439", "website": "bengreenfieldlife.com", "contactSource": "website verified"}, {"handle": "biological_dentist", "name": "Dr Seb (Biological Dentist)", "email": "reception@wonderofwellness.clinic", "phone": "", "website": "wonderofwellness.co.uk", "contactSource": "Wonder of Wellness clinic website"}, {"handle": "denny_dure", "name": "Denny Dure", "email": "", "phone": "", "website": "pillar.io/denny_dure", "contactSource": "Instagram DM @denny_dure only (DM 'DURE')"}, {"handle": "drpompa", "name": "Dr Daniel Pompa", "email": "info@pompaprogram.com", "phone": "1-800-691-7422", "website": "pompaprogram.com", "contactSource": "official website verified"}, {"handle": "dr.carriejones", "name": "Dr Carrie Jones", "email": "hello@drcarriejones.com", "phone": "", "website": "drcarriejones.com", "contactSource": "website verified"}, {"handle": "drmercola", "name": "Dr Joseph Mercola", "email": "editor@mercola.com", "phone": "1-877-985-2695", "website": "mercola.com", "contactSource": "official website verified"}, {"handle": "timferriss", "name": "Tim Ferriss", "email": "speakers@caa.com", "phone": "+1 424-288-2898", "website": "tim.blog", "contactSource": "CAA management (verified)"}, {"handle": "drjockers", "name": "Dr David Jockers", "email": "sales@drjockers.com", "phone": "+1 678-884-3561", "website": "drjockers.com", "contactSource": "official website verified"}, {"handle": "thomasdelauer", "name": "Thomas DeLauer", "email": "thomas.delauer@gmail.com", "phone": "+1 512-671-0110", "website": "thomasdelauer.com", "contactSource": "website verified"}, {"handle": "kaylabarnes", "name": "Kayla Barnes-Lentz", "email": "info@kaylabarnes.com", "phone": "+1 646-628-2009", "website": "kaylabarnes.com", "contactSource": "website verified"}, {"handle": "drgabriellelyon", "name": "Dr Gabrielle Lyon", "email": "strong@drgabriellelyon.com", "phone": "", "website": "drgabriellelyon.com", "contactSource": "website verified"}];
