@@ -1013,7 +1013,93 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 function stats(){return{total:INF.length,conf:INF.filter(function(r){return r.status==='✅ CONFIRMED';}).length,pros:INF.filter(function(r){return r.status==='🔍 PROSPECT';}).length,act:INF.filter(function(r){return r.status==='🔥 ACTIVE PAID';}).length,out:INF.filter(function(r){return r.notes&&r.notes.includes('Outreach Drafted');}).length,pod:POD.length};}
 function updBanner(){var s=stats();var ids={'ov-t':'total','ov-c':'conf','ov-p':'pros','ov-a':'act','ov-o':'out','ov-pod':'pod'};Object.keys(ids).forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=s[ids[id]];});var ti=document.getElementById('tc-inf');if(ti)ti.textContent=s.total;var tp=document.getElementById('tc-pod');if(tp)tp.textContent=s.pod;var tc=document.getElementById('tc2');if(tc)tc.textContent=s.total;}
 function renderFunnel(id){var el=document.getElementById(id);if(!el)return;var s=stats(),tot=Math.max(s.total,1);el.innerHTML=[{l:'🔍 Prospects',n:s.pros,c:'#333'},{l:'✅ Confirmed',n:s.conf,c:'var(--grn)'},{l:'📤 Outreached',n:s.out,c:'var(--bl)'},{l:'🔥 Active Paid',n:s.act,c:'var(--or)'}].map(function(r){return'<div class="frow"><div class="flrow"><span class="flbl">'+r.l+'</span><span class="fnum">'+r.n+'</span></div><div class="fbg"><div class="ffill" style="width:'+Math.round(r.n/tot*100)+'%;background:'+r.c+';"></div></div></div>';}).join('');}
-function loadLog(){fetch('agent_log.json?t='+Date.now()).then(function(r){return r.json();}).then(function(log){var runs=log.runs||[];['log-count','ag-log-count'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=runs.length+' entries';});var html=runs.length===0?'<div class="logempty">No agent runs yet.</div>':runs.slice(0,20).map(function(r){var dc=r.status==='completed'?'ld-done':r.status==='error'?'ld-err':'ld-info';var ts=r.timestamp?new Date(r.timestamp).toLocaleString('en-AU'):'—';return'<div class="logentry"><div class="ldot '+dc+'"></div><div><div class="lagent">'+r.agent+'</div><div class="lmsg">'+r.summary+'</div><div class="lts">'+ts+'</div></div></div>';}).join('');['log-body','ag-log-body'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=html;});if(log.last_updated){var lu=document.getElementById('last-updated');if(lu)lu.textContent='Updated: '+new Date(log.last_updated).toLocaleString('en-AU');}}).catch(function(){});}
+var AGENT_RUNS=[];
+
+function loadLog(){
+  fetch('agent_log.json?t='+Date.now()).then(function(r){return r.json();}).then(function(log){
+    AGENT_RUNS=log.runs||[];
+    ['log-count','ag-log-count'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=AGENT_RUNS.length+' entries';});
+    renderLogEntries();
+    if(log.last_updated){var lu=document.getElementById('last-updated');if(lu)lu.textContent='Updated: '+new Date(log.last_updated).toLocaleString('en-AU');}
+  }).catch(function(){});
+}
+
+function renderLogEntries(){
+  var html=AGENT_RUNS.length===0
+    ?'<div class="logempty">No agent runs recorded yet. Activity appears here automatically after each run.</div>'
+    :AGENT_RUNS.slice(0,20).map(function(r,i){
+      var dc=r.status==='completed'?'ld-done':r.status==='error'?'ld-err':'ld-info';
+      var ts=r.timestamp?new Date(r.timestamp).toLocaleString('en-AU'):'—';
+      var hasDetails=r.details&&r.details.length;
+      var detailsHtml='';
+      if(hasDetails){
+        var inINF=function(nm){return INF.some(function(x){var n=(nm.split(' — ')[0]||nm).toLowerCase();return(x.name||'').toLowerCase().includes(n.split(' ')[1]||n)||n.includes((x.name||'').toLowerCase().split(' ')[1]||'');});};
+        detailsHtml='<div id="run-details-'+i+'" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid #1A1A1A;" onclick="event.stopPropagation()">';
+        if(r.week_type)detailsHtml+='<div style="font-size:10px;color:var(--gl);font-weight:700;margin-bottom:10px;">'+r.week_type+'</div>';
+        detailsHtml+=r.details.map(function(d){
+          var already=inINF(d);
+          var addBtn=already
+            ?'<span style="font-size:10px;color:#555;white-space:nowrap;">✓ Added</span>'
+            :'<button onclick="addProspectFromLog(\''+d.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\','+i+')" style="background:#0D1A0D;border:1px solid #2A5A2A;border-radius:3px;color:#6AC47A;font-size:10px;padding:2px 10px;cursor:pointer;white-space:nowrap;">+ Add</button>';
+          return'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #0F0F0F;">'
+            +'<div style="font-size:12px;color:#CCC;flex:1;line-height:1.4;">'+d+'</div>'
+            +'<div style="flex-shrink:0;">'+addBtn+'</div>'
+            +'</div>';
+        }).join('');
+        if(r.top_recommendations&&r.top_recommendations.length){
+          detailsHtml+='<div style="margin-top:12px;padding:10px 12px;background:#0A150A;border:1px solid #1A3A1A;border-radius:4px;">';
+          detailsHtml+='<div style="font-size:10px;color:#6AC47A;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;">⭐ Top Recommendations</div>';
+          r.top_recommendations.forEach(function(t){detailsHtml+='<div style="font-size:11px;color:#AAA;padding:3px 0;line-height:1.4;">'+t+'</div>';});
+          detailsHtml+='</div>';
+        }
+        if(r.next_week)detailsHtml+='<div style="margin-top:8px;font-size:10px;color:#444;font-style:italic;">Next focus: '+r.next_week+'</div>';
+        detailsHtml+='</div>';
+      }
+      var viewBtn=hasDetails?'<button id="run-btn-'+i+'" onclick="event.stopPropagation();toggleRunDetails('+i+')" style="background:none;border:1px solid #2A2A2A;border-radius:3px;color:#888;font-size:10px;padding:2px 9px;cursor:pointer;margin-left:8px;">▼ '+r.details.length+' added</button>':'';
+      return'<div class="logentry" style="flex-direction:column;" onclick="toggleRunDetails('+i+')">'
+        +'<div style="display:flex;gap:12px;align-items:flex-start;">'
+          +'<div class="ldot '+dc+'" style="margin-top:3px;flex-shrink:0;"></div>'
+          +'<div style="flex:1;">'
+            +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">'
+              +'<span class="lagent">'+r.agent+'</span>'+viewBtn
+            +'</div>'
+            +'<div class="lmsg">'+r.summary+'</div>'
+            +'<div class="lts">'+ts+'</div>'
+          +'</div>'
+        +'</div>'
+        +detailsHtml
+        +'</div>';
+    }).join('');
+  ['log-body','ag-log-body'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=html;});
+}
+
+function toggleRunDetails(i){
+  ['log-body','ag-log-body'].forEach(function(){
+    var el=document.getElementById('run-details-'+i);
+    var btn=document.getElementById('run-btn-'+i);
+    if(!el)return;
+    var open=el.style.display==='block';
+    el.style.display=open?'none':'block';
+    if(btn){var run=AGENT_RUNS[i];var cnt=run&&run.details?run.details.length:0;btn.textContent=open?'▼ '+cnt+' added':'▲ '+cnt+' added';}
+  });
+}
+
+function addProspectFromLog(detailStr,runIdx){
+  var parts=detailStr.split(' — ');
+  var name=parts[0].trim();
+  var notes=parts.slice(1).join(' — ').trim();
+  var fm=detailStr.match(/~([\d.]+[KMkm]+)/i);
+  var followers=fm?'~'+fm[1]:'';
+  var run=AGENT_RUNS[runIdx]||{};
+  INF.unshift({
+    name:name,handle:'',country:'',niche:'',followers:followers,
+    verified:'',bloodTest:'',status:'🔍 PROSPECT',dealType:'',commission:'',
+    rev1:'',rev2:'',igProfile:'',email:'',phone:'',website:'',
+    notes:notes,addedSource:'agent',addedAt:run.timestamp||new Date().toISOString()
+  });
+  sv();renderInf();renderLogEntries();
+  toast(name+' added to Influencers 🆕');
+}
 function initOv(){updBanner();renderFunnel('funnel');loadLog();}
 function initAg(){updBanner();renderFunnel('ag-funnel');loadLog();}
 // INF TABLE
@@ -1115,7 +1201,8 @@ function renderInf(){
     var actions=r.archived
       ?'<button class="btn bg sm" style="margin-right:3px;" onclick="restoreI('+idx+')">↩ Restore</button><button class="btn br sm" onclick="delI('+idx+')">Del</button>'
       :'<button class="btn bg sm" style="margin-right:3px;" onclick="openProfile('+idx+')">Profile</button>'+emailBtn+'<button class="btn bd sm" style="margin-right:3px;" onclick="oEditI('+idx+')">Edit</button><button class="btn bd sm" style="margin-right:3px;background:#2A1A00;color:#D4A040;border-color:#5A3A00;" onclick="archiveI('+idx+')">📦</button><button class="btn br sm" onclick="delI('+idx+')">Del</button>';
-    return'<tr style="'+rowStyle+rowBg+'"><td>'+ig+'</td><td style="font-weight:700;color:var(--wh);cursor:pointer;" onclick="openProfile('+idx+')">'+(r.name||'')+'</td><td style="font-size:11px;">'+(r.country||'')+'</td><td style="color:var(--gl);font-weight:700;">'+(r.followers||'—')+'</td><td style="font-size:11px;color:#AAA;max-width:140px;">'+(r.niche||'')+'</td><td>'+(r.archived?'<span style="color:#666;font-size:11px;">📦 Archived</span>':'<select class="isel" onchange="updIS('+idx+',this.value)">'+so+'</select>')+'</td><td style="font-size:11px;color:#AAA;">'+(r.dealType||'—')+'</td><td>'+pod+'</td><td>'+nt+'</td><td style="white-space:nowrap;">'+actions+'</td></tr>';
+    var newBadge=r.addedSource==='agent'?'<span style="font-size:9px;background:#0D2A10;color:#5ACA7A;padding:1px 5px;border-radius:3px;margin-right:5px;font-weight:700;vertical-align:middle;">🆕</span>':'';
+    return'<tr style="'+rowStyle+rowBg+(r.addedSource==='agent'?'border-left:2px solid #2A5A2A;':'')+'"><td>'+ig+'</td><td style="font-weight:700;color:var(--wh);cursor:pointer;" onclick="openProfile('+idx+')">'+newBadge+(r.name||'')+'</td><td style="font-size:11px;">'+(r.country||'')+'</td><td style="color:var(--gl);font-weight:700;">'+(r.followers||'—')+'</td><td style="font-size:11px;color:#AAA;max-width:140px;">'+(r.niche||'')+'</td><td>'+(r.archived?'<span style="color:#666;font-size:11px;">📦 Archived</span>':'<select class="isel" onchange="updIS('+idx+',this.value)">'+so+'</select>')+'</td><td style="font-size:11px;color:#AAA;">'+(r.dealType||'—')+'</td><td>'+pod+'</td><td>'+nt+'</td><td style="white-space:nowrap;">'+actions+'</td></tr>';
   }).join('');
   var active=INF.filter(function(r){return!r.archived;}).length;
   document.getElementById('icnt').textContent=showArchived?'Showing '+d.length+' archived':('Showing '+d.length+' of '+active+' active — Confirmed pinned top');
