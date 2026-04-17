@@ -157,6 +157,40 @@ tbody td{padding:9px 12px;font-size:12px;color:var(--grl);vertical-align:middle;
 /* FOOTER */
 .footer{border-top:1px solid #1A1A1A;padding:14px 30px;display:flex;justify-content:space-between;align-items:center;color:var(--gr);font-size:11px;margin-top:20px;}
 .footer .brand{color:var(--gd);font-weight:700;}
+.sync-btn{padding:6px 14px;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:4px;color:#888;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.15s;}
+.sync-btn:hover{background:#2A2A2A;color:var(--wh);}
+.sync-btn.pulse{border-color:var(--gl);color:var(--gl);}
+
+/* ── MOBILE RESPONSIVE ───────────────────────────────────────────── */
+@media(max-width:768px){
+  .header{flex-wrap:wrap;}
+  .hlogo{padding:10px 16px;border-right:none;border-bottom:1px solid #222;}
+  .ls{display:none;}
+  .htabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;}
+  .htab{padding:0 14px;font-size:10px;min-height:40px;}
+  .hright{padding:8px 16px;border-top:1px solid #222;width:100%;text-align:left;display:flex;align-items:center;gap:12px;}
+  .htime{font-size:15px;}
+  .page{padding:14px 12px;}
+  .pbanner{flex-wrap:wrap;}
+  .pstat{flex:1 1 30%;padding:10px 8px;}
+  table{min-width:600px;}
+  .page .tbwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .md{width:96vw!important;max-width:100vw!important;margin:0!important;}
+  .mtabs{flex-wrap:wrap;}
+  .mtab{font-size:10px;padding:8px 10px;}
+  .fg{grid-template-columns:1fr!important;}
+  .agrid{grid-template-columns:1fr!important;}
+  #page-overview .slbl{margin-top:16px;}
+  .mdialog-overlay{padding:8px;}
+  .sbox{font-size:12px;}
+  button.btn{font-size:11px;padding:5px 10px;}
+}
+@media(max-width:480px){
+  .htab .cnt{display:none;}
+  .hlogo .lm{font-size:16px;}
+  .pstat{flex:1 1 45%;}
+  .page{padding:10px 8px;}
+}
 </style>
 </head>
 <body>
@@ -174,8 +208,13 @@ tbody td{padding:9px 12px;font-size:12px;color:var(--grl);vertical-align:middle;
     <div class="htab" onclick="showPage('podcasts')">🎙 Podcasts <span class="cnt" id="tc-pod">22</span></div>
     <div class="htab" onclick="showPage('agents')">🤖 Agents</div>
   </div>
-  <div class="hright">
-    <div class="htime" id="clock">--:--</div>
+  <div class="hright" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="sync-btn" class="sync-btn" onclick="exportSyncFile()" title="Download crm_data.json then run deploy script to push live">⬆ Export & Sync</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="htime" id="clock">--:--</div>
+    </div>
     <div class="hdate" id="clock-date"></div>
   </div>
 </div>
@@ -836,28 +875,38 @@ tbody td{padding:9px 12px;font-size:12px;color:var(--grl);vertical-align:middle;
 
       <!-- NEXT ACTIONS -->
       <div class="mpanel" id="prof-actions">
-        <div style="font-size:11px;color:var(--gr);margin-bottom:14px;">Set the single most important next action for this influencer. The outreach agent reads this.</div>
-        <div class="fg">
-          <div style="grid-column:1/-1;"><label>Next Action</label>
-            <select id="act-type" class="isel" style="width:100%;font-size:13px;padding:7px 10px;margin-bottom:10px;" onchange="saveNextAction()">
-              <option value="">Select next action...</option>
-              <option value="📤 Send intro email">📤 Send intro email</option>
-              <option value="📩 Send IG DM">📩 Send IG DM</option>
-              <option value="📋 Send follow-up">📋 Send follow-up</option>
-              <option value="📞 Book a call">📞 Book a call</option>
-              <option value="📄 Send proposal deck">📄 Send proposal deck</option>
-              <option value="🤝 Onboard to whitelist">🤝 Onboard to whitelist</option>
-              <option value="🎙 Book podcast recording">🎙 Book podcast recording</option>
-              <option value="💰 Send payout">💰 Send payout</option>
-              <option value="📊 Review performance">📊 Review performance</option>
-            </select>
-            <label>Due Date</label>
-            <input id="act-date" type="date" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;margin-bottom:10px;" onchange="saveNextAction()">
-            <label>Notes on next action</label>
-            <textarea id="act-notes" style="width:100%;background:#111;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;min-height:70px;resize:vertical;" placeholder="e.g. Christie has agreed to start whitelisting — need to send her the ad account access and brief." oninput="saveNextAction()"></textarea>
+        <div style="font-size:11px;color:var(--gr);margin-bottom:14px;">Log actions for this influencer. Tick off when done. Open actions are read by the outreach agent.</div>
+
+        <!-- Action list -->
+        <div id="act-list" style="margin-bottom:16px;"></div>
+
+        <!-- Add action form -->
+        <div style="background:#111;border:1px solid #1E1E1E;border-radius:6px;padding:14px;">
+          <div style="font-size:11px;font-weight:700;color:var(--gl);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Add Action</div>
+          <select id="act-type" class="isel" style="width:100%;font-size:13px;padding:7px 10px;margin-bottom:10px;">
+            <option value="">Select action type...</option>
+            <option value="📤 Send intro email">📤 Send intro email</option>
+            <option value="📩 Send IG DM">📩 Send IG DM</option>
+            <option value="📋 Send follow-up">📋 Send follow-up</option>
+            <option value="📞 Book a call">📞 Book a call</option>
+            <option value="📄 Send proposal deck">📄 Send proposal deck</option>
+            <option value="🤝 Onboard to whitelist">🤝 Onboard to whitelist</option>
+            <option value="🎙 Book podcast recording">🎙 Book podcast recording</option>
+            <option value="💰 Send payout">💰 Send payout</option>
+            <option value="📊 Review performance">📊 Review performance</option>
+          </select>
+          <label style="font-size:11px;color:#666;display:block;margin-bottom:4px;">Due Date</label>
+          <input id="act-date" type="date" style="width:100%;background:#0A0A0A;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;margin-bottom:10px;color-scheme:dark;">
+          <label style="font-size:11px;color:#666;display:block;margin-bottom:4px;">Notes</label>
+          <textarea id="act-notes" style="width:100%;background:#0A0A0A;border:1px solid #2A2A2A;border-radius:4px;padding:7px 10px;color:var(--wh);font-size:13px;outline:none;min-height:60px;resize:vertical;margin-bottom:12px;" placeholder="Context or instructions for this action..."></textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;gap:0;border:1px solid #2A2A2A;border-radius:20px;overflow:hidden;">
+              <button id="act-method-manual" onclick="setActMethod('manual')" style="padding:5px 14px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:#C4993A;color:#000;transition:.15s;">👤 Manual</button>
+              <button id="act-method-agent" onclick="setActMethod('agent')" style="padding:5px 14px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:#1A1A1A;color:#555;transition:.15s;">🤖 Agent</button>
+            </div>
+            <button onclick="addAction()" style="background:var(--gl);color:#000;border:none;padding:7px 20px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;">+ Save Action</button>
           </div>
         </div>
-        <div id="act-overdue" style="display:none;margin-top:12px;background:var(--rdd);border:1px solid #5A1A1A;border-radius:4px;padding:10px 14px;font-size:12px;color:#F5A5A0;">⚠️ This action is overdue!</div>
       </div>
 
     </div>
@@ -879,7 +928,47 @@ let POD=JSON.parse(localStorage.getItem(LS_P)||'null')||JSON.parse(JSON.stringif
 let eI=null,eP=null,sI={k:'country',d:1},sP={k:'priority',d:1};
 INF.forEach(function(r){if(!r.hook)r.hook='';if(!r.angles)r.angles='';if(!r.cta)r.cta='';if(!r.know)r.know='';if(!r.personal)r.personal='';if(!r.prior)r.prior='';if(!r.temp)r.temp='cold';});
 POD.forEach(function(r){if(!r.hook)r.hook='';if(!r.points)r.points='';if(!r.know)r.know='';if(!r.prior2)r.prior2='';if(!r.temp)r.temp='cold';});
-function sv(){localStorage.setItem(LS_I,JSON.stringify(INF));localStorage.setItem(LS_P,JSON.stringify(POD));}
+function sv(){
+  localStorage.setItem(LS_I,JSON.stringify(INF));
+  localStorage.setItem(LS_P,JSON.stringify(POD));
+  // Mark unsaved changes
+  var btn=document.getElementById('sync-btn');
+  if(btn){btn.classList.add('pulse');btn.textContent='⬆ Export & Sync *';}
+}
+
+function exportSyncFile(){
+  var data={version:2,exported:new Date().toISOString(),influencers:INF,podcasts:POD};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='crm_data.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  var btn=document.getElementById('sync-btn');
+  if(btn){btn.classList.remove('pulse');btn.textContent='⬆ Export & Sync';}
+  toast('crm_data.json downloaded — move to your Projects/MrFoxx - IOH folder then run deploy script');
+}
+
+// On load: try to fetch crm_data.json (works when hosted on GitHub Pages)
+// If found, it overrides localStorage — all viewers see the same synced data
+(function loadCrmSync(){
+  fetch('crm_data.json?t='+Date.now())
+    .then(function(r){if(!r.ok)throw new Error('no file');return r.json();})
+    .then(function(d){
+      if(d&&d.influencers&&Array.isArray(d.influencers)){
+        INF=d.influencers;
+        localStorage.setItem(LS_I,JSON.stringify(INF));
+      }
+      if(d&&d.podcasts&&Array.isArray(d.podcasts)){
+        POD=d.podcasts;
+        localStorage.setItem(LS_P,JSON.stringify(POD));
+      }
+      console.log('[IOH] Loaded synced data from crm_data.json ('+new Date(d.exported).toLocaleString()+')');
+    })
+    .catch(function(){
+      // No crm_data.json yet — fine, use localStorage/SEED
+    });
+})();
 // ── CONTACT SYNC (merges researched contacts into live localStorage data) ─────
 var LS_CSYNC='ioh_contacts_synced_v2';
 var CONTACT_LOOKUP=[{"handle": "mmoorefit", "name": "Ollie Moore", "email": "Moorefitness2022@gmail.com", "phone": "", "website": "linktr.ee/mmoorefit", "contactSource": "website"}, {"handle": "christiewhitehill", "name": "Christie Whitehill", "email": "christie@intuwellness.com", "phone": "", "website": "intuwellness.com", "contactSource": "Intu Wellness (co-founder)"}, {"handle": "nickbellau", "name": "Nick Bell", "email": "info@saxton.com.au", "phone": "1300 799 823", "website": "nick-bell.com", "contactSource": "Saxton Speakers Australia (booking agency)"}, {"handle": "jonocastanoacero", "name": "Jono Castano", "email": "james@neonmgmt.com", "phone": "", "website": "acerotrainingseries.com", "contactSource": "management (Neon Mgmt)"}, {"handle": "tashfriedman", "name": "Natasha Friedman", "email": "natasha@myfunctionalfill.com", "phone": "", "website": "myfunctionalfill.com", "contactSource": "digital practice"}, {"handle": "mrtimrobards", "name": "Tim Robards", "email": "contact@endorsco.com", "phone": "", "website": "endorsco.com", "contactSource": "management (Endorse Co)"}, {"handle": "jeremyjcabral", "name": "Jeremy Cabral", "email": "jeremy@finder.com", "phone": "+61 2 9155 7800", "website": "finder.com.au", "contactSource": "company directory"}, {"handle": "erinvholland", "name": "Erin Holland", "email": "mb@atarimae.agency", "phone": "", "website": "atarimae.agency", "contactSource": "management (Atarimae Agency)"}, {"handle": "mark_bouris", "name": "Mark Bouris", "email": "contact@endorsco.com", "phone": "", "website": "markbouris.com.au", "contactSource": "management (Endorse Co)"}, {"handle": "drbradburton", "name": "Dr Brad Borton", "email": "", "phone": "", "website": "", "contactSource": "not found"}, {"handle": "laynebuckley", "name": "Layne Buckley", "email": "", "phone": "", "website": "", "contactSource": "not found"}, {"handle": "drgabrielleleone", "name": "Dr Gabrielle Leone", "email": "strong@drgabriellelyon.com", "phone": "", "website": "drgabriellelyon.com", "contactSource": "official website (corrected)"}, {"handle": "thehealthcode_au", "name": "The Health Code", "email": "hello@twopalms.com.au", "phone": "+61 478 536 312", "website": "", "contactSource": "Two Palms Media (Kurt Tilse/Sarah's Day management)"}, {"handle": "drchatterjee", "name": "Dr Rangan Chatterjee", "email": "info@drchatterjee.com", "phone": "", "website": "drchatterjee.com", "contactSource": "official website verified"}, {"handle": "doctors_kitchen", "name": "Dr Rupy Aujla", "email": "enquiries@bevjames.com", "phone": "", "website": "thedoctorskitchen.com", "contactSource": "Bev James Management (speaking engagements)"}, {"handle": "angelafosterperformance", "name": "Angela Foster", "email": "angela@angelafosterperformance.com", "phone": "", "website": "angelafosterperformance.com", "contactSource": "official website verified"}, {"handle": "theoptimalperformance", "name": "Dr Tommy Wood", "email": "", "phone": "1-800-698-2536", "website": "drtommywood.com", "contactSource": "All American Speakers / Performance Insights UK"}, {"handle": "drandrewsteele", "name": "Dr Andrew Steele", "email": "statto@andrewsteele.co.uk", "phone": "", "website": "andrewsteele.co.uk", "contactSource": "LinkedIn / website (rapid reply confirmed)"}, {"handle": "maxlugavere", "name": "Max Lugavere", "email": "contact@maxlugavere.com", "phone": "", "website": "maxlugavere.com", "contactSource": "website / booking agent"}, {"handle": "simonhillnutrition", "name": "Simon Hill", "email": "simon@theproof.com", "phone": "", "website": "theproof.com", "contactSource": "official website verified"}, {"handle": "bengreenfieldlife", "name": "Ben Greenfield", "email": "ben@bengreenfieldfitness.com", "phone": "1-877-209-9439", "website": "bengreenfieldlife.com", "contactSource": "official website verified"}, {"handle": "drmarkhyman", "name": "Dr Mark Hyman", "email": "support@drhyman.com", "phone": "888-702-2995", "website": "drhyman.com", "contactSource": "official website verified"}, {"handle": "hubermanlab", "name": "Andrew Huberman", "email": "info@hubermanlab.com", "phone": "+1 650-723-2465", "website": "hubermanlab.com", "contactSource": "official website verified"}, {"handle": "davidsinclairphd", "name": "David Sinclair", "email": "david_sinclair@hms.harvard.edu", "phone": "", "website": "davidasinclair.com", "contactSource": "Harvard Medical School directory"}, {"handle": "peterattiamd", "name": "Peter Attia", "email": "billing@peterattiamd.com", "phone": "", "website": "peterattiamd.com", "contactSource": "official website"}, {"handle": "drhyman", "name": "Dr Mark Hyman", "email": "contact@ultrawellnesscenter.com", "phone": "+1 413-637-9991", "website": "ultrawellnesscenter.com", "contactSource": "Ultra Wellness Center"}, {"handle": "foundmyfitness", "name": "Dr Rhonda Patrick", "email": "", "phone": "1-800-698-2536", "website": "foundmyfitness.com", "contactSource": "AAE Speakers Bureau (use contact form on website)"}, {"handle": "briandjohnson", "name": "Bryan Johnson", "email": "support@bryanjohnson.com", "phone": "", "website": "blueprint.bryanjohnson.com", "contactSource": "official website verified"}, {"handle": "garyvee", "name": "Gary Vaynerchuk", "email": "gary@vaynermedia.com", "phone": "", "website": "garyvaynerchuk.com", "contactSource": "official website + X/Twitter"}, {"handle": "lewishowes", "name": "Lewis Howes", "email": "lewis@greatness.com", "phone": "+1 614-350-3960", "website": "lewishowes.com", "contactSource": "official team email (corrected from contact@lewishowes.com)"}, {"handle": "drmindypelz", "name": "Dr Mindy Pelz", "email": "info@drmindypelz.com", "phone": "+1 408-298-8092", "website": "drmindypelz.com", "contactSource": "official website verified"}, {"handle": "jimkwik", "name": "Jim Kwik", "email": "contact@jimkwik.com", "phone": "", "website": "jimkwik.com", "contactSource": "official website verified"}, {"handle": "a.glimpse.of.amelia", "name": "Amelia (A Glimpse of Amelia)", "email": "Amelia@agoa.com.au", "phone": "", "website": "agoa.com.au", "contactSource": "official website verified"}, {"handle": "garybrecka", "name": "Gary Brecka", "email": "contact@theultimatehuman.com", "phone": "+1 239-325-9645", "website": "theultimatehuman.com", "contactSource": "The Ultimate Human website"}, {"handle": "dave.asprey", "name": "Dave Asprey", "email": "david@asprey.net", "phone": "+1 408-887-1505", "website": "daveasprey.com", "contactSource": "official website verified"}, {"handle": "cbum", "name": "Chris Bumstead", "email": "christopher.bumstead@gmail.com", "phone": "", "website": "cbumfitness.com", "contactSource": "ContactOut / MN2S booking agency"}, {"handle": "dr.amybkillen", "name": "Dr Amy Killen", "email": "amybkillen@gmail.com", "phone": "", "website": "dramykillen.com", "contactSource": "online sources"}, {"handle": "nathalieniddam", "name": "Nathalie Niddam", "email": "nathalie@nathalieniddam.com", "phone": "+1 929-589-1440", "website": "natniddam.com", "contactSource": "website"}, {"handle": "steven", "name": "Steven Bartlett", "email": "commercial@stevenbartlett.com", "phone": "", "website": "stevenbartlett.com", "contactSource": "official website + LinkedIn verified"}, {"handle": "melrobbins", "name": "Mel Robbins", "email": "hello@melrobbins.com", "phone": "+1 855-827-9635", "website": "melrobbins.com", "contactSource": "official website verified"}, {"handle": "lowtoxlife", "name": "Alexx Stuart", "email": "hello@lowtoxlife.com", "phone": "", "website": "lowtoxlife.com", "contactSource": "official contact page (corrected from contact@)"}, {"handle": "drkarafitzgerald", "name": "Dr Kara Fitzgerald", "email": "frontdesk@drkarafitzgerald.com", "phone": "+1 203-304-9502", "website": "drkarafitzgerald.com", "contactSource": "clinic contact page verified"}, {"handle": "d_alec_zeck", "name": "Alec Zeck", "email": "hello@thewayfwrd.com", "phone": "", "website": "thewayfwrd.com", "contactSource": "official website verified"}, {"handle": "bernadette.abraham", "name": "Bernadette Abraham", "email": "Bernadette@BernadetteAbraham.com", "phone": "", "website": "bernadetteabraham.com", "contactSource": "official website verified"}, {"handle": "pjharlowwellness", "name": "PJ Harlow", "email": "pjharlowwellness@gmail.com", "phone": "+1 302-236-5509", "website": "pjharlowwellness.com", "contactSource": "official website verified"}, {"handle": "dr.jess.md", "name": "Dr Jessica Peatross", "email": "support@drjessmd.com", "phone": "", "website": "drjessmd.com", "contactSource": "official website verified"}, {"handle": "healingcavelady", "name": "Mary Darnall", "email": "healingcavelady@gmail.com", "phone": "", "website": "healingcavelady.com", "contactSource": "official website verified"}, {"handle": "drjeffreybland", "name": "Dr Jeffrey Bland", "email": "jeffbland@bigboldhealth.com", "phone": "+1 206-201-3794", "website": "bigboldhealth.com", "contactSource": "official website (corrected from trisheury@)"}, {"handle": "dr.williamwallace", "name": "Dr William Wallace", "email": "", "phone": "", "website": "drwilliamwallace.com", "contactSource": "Instagram DM @dr.williamwallace (no public email)"}, {"handle": "tonymcaleavey", "name": "Tony McAleavey", "email": "", "phone": "", "website": "tonymcaleaveyfitness.com", "contactSource": "Instagram DM @tonymcaleavey (company dissolved 2024)"}, {"handle": "hattieboydle", "name": "Hattie Boydle", "email": "Hattieboydlept@gmail.com", "phone": "+61 2 418 406 955", "website": "hattieboydle.com.au", "contactSource": "official website verified"}, {"handle": "itscoachgoodman", "name": "Jonathan Goodman", "email": "Jonathan@theptdc.com", "phone": "", "website": "jonathangoodman.com", "contactSource": "PTDC website verified"}, {"handle": "drjohnberardi", "name": "Dr John Berardi", "email": "info@precisionnutrition.com", "phone": "1-877-660-6464", "website": "precisionnutrition.com", "contactSource": "Precision Nutrition company contact"}, {"handle": "sarahkleinerwellness", "name": "Sarah Kleiner", "email": "sarah@sarahkleinerwellness.com", "phone": "", "website": "sarahkleinerwellness.com", "contactSource": "website verified"}, {"handle": "doc_amen", "name": "Dr Daniel Amen", "email": "nbuchoz@amenclinic.com", "phone": "+1 855-421-5425", "website": "danielamenmd.com", "contactSource": "Amen Clinics management verified"}, {"handle": "paulsaladinomd", "name": "Dr Paul Saladino", "email": "info@paulsaladinomd.co", "phone": "", "website": "paulsaladinomd.com", "contactSource": "official website verified"}, {"handle": "kashkhanofficial", "name": "Kashif Khan", "email": "kashif@thednacompany.com", "phone": "+1 416-622-6800", "website": "kashkhanofficial.com", "contactSource": "DNA Company verified"}, {"handle": "bengreenfieldfitness", "name": "Ben Greenfield (Fitness)", "email": "support@bengreenfieldlife.com", "phone": "1-877-209-9439", "website": "bengreenfieldlife.com", "contactSource": "website verified"}, {"handle": "biological_dentist", "name": "Dr Seb (Biological Dentist)", "email": "reception@wonderofwellness.clinic", "phone": "", "website": "wonderofwellness.co.uk", "contactSource": "Wonder of Wellness clinic website"}, {"handle": "denny_dure", "name": "Denny Dure", "email": "", "phone": "", "website": "pillar.io/denny_dure", "contactSource": "Instagram DM @denny_dure only (DM 'DURE')"}, {"handle": "drpompa", "name": "Dr Daniel Pompa", "email": "info@pompaprogram.com", "phone": "1-800-691-7422", "website": "pompaprogram.com", "contactSource": "official website verified"}, {"handle": "dr.carriejones", "name": "Dr Carrie Jones", "email": "hello@drcarriejones.com", "phone": "", "website": "drcarriejones.com", "contactSource": "website verified"}, {"handle": "drmercola", "name": "Dr Joseph Mercola", "email": "editor@mercola.com", "phone": "1-877-985-2695", "website": "mercola.com", "contactSource": "official website verified"}, {"handle": "timferriss", "name": "Tim Ferriss", "email": "speakers@caa.com", "phone": "+1 424-288-2898", "website": "tim.blog", "contactSource": "CAA management (verified)"}, {"handle": "drjockers", "name": "Dr David Jockers", "email": "sales@drjockers.com", "phone": "+1 678-884-3561", "website": "drjockers.com", "contactSource": "official website verified"}, {"handle": "thomasdelauer", "name": "Thomas DeLauer", "email": "thomas.delauer@gmail.com", "phone": "+1 512-671-0110", "website": "thomasdelauer.com", "contactSource": "website verified"}, {"handle": "kaylabarnes", "name": "Kayla Barnes-Lentz", "email": "info@kaylabarnes.com", "phone": "+1 646-628-2009", "website": "kaylabarnes.com", "contactSource": "website verified"}, {"handle": "drgabriellelyon", "name": "Dr Gabrielle Lyon", "email": "strong@drgabriellelyon.com", "phone": "", "website": "drgabriellelyon.com", "contactSource": "website verified"}];
@@ -1061,7 +1150,7 @@ var currentProfileIdx=null;
 function openProfile(idx){
   currentProfileIdx=idx;
   var r=INF[idx];
-  if(!r.crm)r.crm={comms:[],whitelist:'',liveDate:'',revenueGenerated:'',payout:'',certs:'',rate:'',revNotes:'',nextAction:'',nextActionDate:'',nextActionNotes:''};
+  if(!r.crm)r.crm={comms:[],whitelist:'',liveDate:'',revenueGenerated:'',payout:'',certs:'',rate:'',revNotes:'',actions:[]};
   document.getElementById('prof-name').textContent=r.name;
   var igUrl=r.igProfile||(r.handle?'https://www.instagram.com/'+r.handle.replace('@',''):'' );
   document.getElementById('prof-handle').innerHTML=(igUrl?'<a href="'+igUrl+'" target="_blank" style="color:var(--gl);text-decoration:none;">'+r.handle+'</a> ':r.handle||'')+(r.podcastUrl?'&nbsp;·&nbsp;<a href="'+r.podcastUrl+'" target="_blank" style="color:var(--gl);text-decoration:none;">🎙 Podcast</a>':'');
@@ -1088,11 +1177,13 @@ function openProfile(idx){
   document.getElementById('rev-rate').value=r.crm.rate||'';
   document.getElementById('rev-notes').value=r.crm.revNotes||'';
   updateRevSummary();
-  // Next action
-  document.getElementById('act-type').value=r.crm.nextAction||'';
-  document.getElementById('act-date').value=r.crm.nextActionDate||'';
-  document.getElementById('act-notes').value=r.crm.nextActionNotes||'';
-  checkOverdue();
+  // Next actions list
+  currentActMethod='manual';
+  setActMethod('manual');
+  document.getElementById('act-type').value='';
+  document.getElementById('act-date').value='';
+  document.getElementById('act-notes').value='';
+  renderActionsList();
   // Comms
   renderCommsLog();
   // Contact panel
@@ -1186,18 +1277,89 @@ function updateRevSummary(){
     el.innerHTML='Revenue: <strong>$'+gen.toLocaleString()+'</strong> &nbsp;·&nbsp; Payout: <strong>$'+pay.toLocaleString()+'</strong> &nbsp;·&nbsp; Net IOH: <strong>$'+net.toLocaleString()+'</strong> &nbsp;·&nbsp; Certs referred: <strong>'+certs+'</strong>';
   } else {el.style.display='none';}
 }
-function saveNextAction(){
-  if(currentProfileIdx===null)return;
-  var r=INF[currentProfileIdx];if(!r.crm)r.crm={comms:[]};
-  r.crm.nextAction=document.getElementById('act-type').value;
-  r.crm.nextActionDate=document.getElementById('act-date').value;
-  r.crm.nextActionNotes=document.getElementById('act-notes').value;
-  sv();checkOverdue();
+var currentActMethod='manual';
+
+function setActMethod(m){
+  currentActMethod=m;
+  var mb=document.getElementById('act-method-manual');
+  var ab=document.getElementById('act-method-agent');
+  if(!mb||!ab)return;
+  mb.style.background=m==='manual'?'#C4993A':'#1A1A1A';
+  mb.style.color=m==='manual'?'#000':'#555';
+  ab.style.background=m==='agent'?'#C4993A':'#1A1A1A';
+  ab.style.color=m==='agent'?'#000':'#555';
 }
-function checkOverdue(){
-  var d=document.getElementById('act-date').value;
-  var el=document.getElementById('act-overdue');
-  if(d&&new Date(d)<new Date()){el.style.display='block';}else{el.style.display='none';}
+
+function addAction(){
+  if(currentProfileIdx===null)return;
+  var type=document.getElementById('act-type').value;
+  if(!type){toast('Pick an action type first');return;}
+  var r=INF[currentProfileIdx];
+  if(!r.crm)r.crm={comms:[]};
+  if(!r.crm.actions)r.crm.actions=[];
+  r.crm.actions.push({
+    id:Date.now(),
+    type:type,
+    date:document.getElementById('act-date').value,
+    notes:document.getElementById('act-notes').value,
+    method:currentActMethod,
+    done:false,
+    createdAt:new Date().toISOString()
+  });
+  document.getElementById('act-type').value='';
+  document.getElementById('act-date').value='';
+  document.getElementById('act-notes').value='';
+  setActMethod('manual');
+  sv();
+  renderActionsList();
+}
+
+function toggleActionDone(id){
+  if(currentProfileIdx===null)return;
+  var r=INF[currentProfileIdx];
+  var a=(r.crm.actions||[]).find(function(x){return x.id===id;});
+  if(a){a.done=!a.done;sv();renderActionsList();}
+}
+
+function deleteAction(id){
+  if(currentProfileIdx===null)return;
+  var r=INF[currentProfileIdx];
+  r.crm.actions=(r.crm.actions||[]).filter(function(x){return x.id!==id;});
+  sv();renderActionsList();
+}
+
+function renderActionsList(){
+  if(currentProfileIdx===null)return;
+  var r=INF[currentProfileIdx];
+  var actions=(r.crm&&r.crm.actions)||[];
+  var el=document.getElementById('act-list');
+  if(!el)return;
+  if(!actions.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;font-size:11px;color:#444;border:1px dashed #1E1E1E;border-radius:6px;margin-bottom:4px;">No actions yet — add the first one below</div>';
+    return;
+  }
+  var today=new Date();today.setHours(0,0,0,0);
+  var open=actions.filter(function(a){return !a.done;}).sort(function(a,b){return(a.date||'9')>(b.date||'9')?1:-1;});
+  var done=actions.filter(function(a){return a.done;});
+  var all=open.concat(done);
+  var html='';
+  all.forEach(function(a){
+    var overdue=!a.done&&a.date&&new Date(a.date)<today;
+    var mBadge=a.method==='agent'
+      ?'<span style="font-size:10px;background:#0D1F0D;color:#5A9A5A;padding:2px 8px;border-radius:10px;margin-left:6px;white-space:nowrap;">🤖 Agent</span>'
+      :'<span style="font-size:10px;background:#0D0D1F;color:#7070AA;padding:2px 8px;border-radius:10px;margin-left:6px;white-space:nowrap;">👤 Manual</span>';
+    var dateStr=a.date?'<span style="font-size:10px;color:'+(overdue?'#F5A5A0':'#555')+';margin-right:6px;">'+(overdue?'⚠️ ':'📅 ')+a.date+'</span>':'';
+    html+='<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:'+(a.done?'#0C0C0C':'#111')+';border:1px solid #1E1E1E;border-radius:6px;margin-bottom:6px;opacity:'+(a.done?'0.45':'1')+';transition:.2s;">';
+    html+='<input type="checkbox" '+(a.done?'checked':'')+' onchange="toggleActionDone('+a.id+')" style="margin-top:3px;cursor:pointer;accent-color:#C4993A;flex-shrink:0;">';
+    html+='<div style="flex:1;min-width:0;">';
+    html+='<div style="font-size:12px;font-weight:700;color:'+(a.done?'#444':'var(--wh)')+';text-decoration:'+(a.done?'line-through':'none')+';margin-bottom:5px;display:flex;align-items:center;flex-wrap:wrap;gap:2px;">'+a.type+mBadge+'</div>';
+    if(dateStr){html+='<div style="margin-bottom:3px;">'+dateStr+'</div>';}
+    if(a.notes){html+='<div style="font-size:11px;color:#666;line-height:1.55;">'+a.notes+'</div>';}
+    html+='</div>';
+    html+='<button onclick="deleteAction('+a.id+')" style="background:none;border:none;cursor:pointer;color:#2A2A2A;font-size:12px;padding:0;line-height:1;flex-shrink:0;" onmouseover="this.style.color=\'#888\'" onmouseout="this.style.color=\'#2A2A2A\'">✕</button>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
 }
 
 // ── EMAIL PROFILE MANAGER ─────────────────────────────────────────
