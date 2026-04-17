@@ -678,6 +678,11 @@ tbody td{padding:9px 12px;font-size:12px;color:var(--grl);vertical-align:middle;
         <button onclick="clearSyncConfig()" style="background:none;border:1px solid #2A2A2A;color:#666;padding:8px 14px;border-radius:4px;font-size:12px;cursor:pointer;">Clear Token</button>
       </div>
       <div id="sync-test-result" style="margin-top:12px;font-size:11px;"></div>
+      <div style="margin-top:24px;padding-top:18px;border-top:1px solid #1E1E1E;">
+        <div style="font-size:11px;color:#555;margin-bottom:10px;">If your data looks wrong or missing, restore from the embedded dataset:</div>
+        <button onclick="restoreFromSeed()" style="background:#1A0A0A;border:1px solid #4A1A1A;color:#E07070;padding:7px 16px;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;">↩ Restore Original Data</button>
+        <div style="font-size:10px;color:#444;margin-top:6px;">Reloads all 67 influencers from the built-in dataset. Any CRM edits you made inside the dashboard will need to be re-entered.</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1000,6 +1005,14 @@ function clearSyncConfig(){
   localStorage.removeItem(LS_GH_TOKEN);localStorage.removeItem(LS_GH_REPO);localStorage.removeItem(LS_GH_USER);
   document.getElementById('sync-test-result').innerHTML='<span style="color:#888;">Token cleared.</span>';
   setSyncBtn('⚙ Setup Sync','');
+}
+
+function restoreFromSeed(){
+  if(!confirm('This will reload all influencer data from the built-in dataset. Any status changes or notes you entered in the dashboard will be lost. Continue?'))return;
+  localStorage.removeItem(LS_I);
+  localStorage.removeItem(LS_P);
+  localStorage.setItem(LS_SV_TS,new Date().toISOString());
+  location.reload();
 }
 
 function pushToGitHub(){
