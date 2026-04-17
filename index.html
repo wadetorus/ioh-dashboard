@@ -937,7 +937,7 @@ function sv(){
 }
 
 function exportSyncFile(){
-  var data={version:2,exported:new Date().toISOString(),influencers:INF,podcasts:POD};
+  var data={version:2,exported:new Date().toISOString(),influencers:INF,podcasts:POD,feedback:getFeedback()};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   var a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -958,6 +958,7 @@ function exportSyncFile(){
       var updated=false;
       if(d&&d.influencers&&Array.isArray(d.influencers)){INF=d.influencers;localStorage.setItem(LS_I,JSON.stringify(INF));updated=true;}
       if(d&&d.podcasts&&Array.isArray(d.podcasts)){POD=d.podcasts;localStorage.setItem(LS_P,JSON.stringify(POD));updated=true;}
+      if(d&&d.feedback&&Array.isArray(d.feedback)){saveFeedback(d.feedback);}
       if(updated){
         // Re-render the currently visible page so changes show immediately
         setTimeout(function(){
@@ -1032,64 +1033,129 @@ function loadLog(){
   }).catch(function(){});
 }
 
+// ── PROSPECT FEEDBACK ─────────────────────────────────────────────
+var LS_FB='ioh_feedback_v1';
+function getFeedback(){return JSON.parse(localStorage.getItem(LS_FB)||'[]');}
+function saveFeedback(arr){localStorage.setItem(LS_FB,JSON.stringify(arr));}
+function getProspectDecision(name){
+  var n=name.toLowerCase();
+  return getFeedback().find(function(f){return f.name.toLowerCase()===n;})||null;
+}
+function recordFeedback(name,detail,decision,runIdx){
+  var arr=getFeedback().filter(function(f){return f.name.toLowerCase()!==name.toLowerCase();});
+  arr.push({name:name,detail:detail,decision:decision,runIdx:runIdx,runTimestamp:(AGENT_RUNS[runIdx]||{}).timestamp||'',decidedAt:new Date().toISOString()});
+  saveFeedback(arr);
+}
+function confirmProspect(detailStr,runIdx){
+  var name=detailStr.split(' \u2014 ')[0].trim();
+  recordFeedback(name,detailStr,'confirm',runIdx);
+  addProspectFromLog(detailStr,runIdx);
+}
+function skipProspect(detailStr,runIdx){
+  var name=detailStr.split(' \u2014 ')[0].trim();
+  recordFeedback(name,detailStr,'skip',runIdx);
+  renderLogEntries();
+  toast(name+' skipped — agent will avoid similar profiles');
+}
+function undoFeedback(name){
+  var arr=getFeedback().filter(function(f){return f.name.toLowerCase()!==name.toLowerCase();});
+  saveFeedback(arr);
+  renderLogEntries();
+  toast('Decision cleared for '+name);
+}
+
+function buildRunHtml(r,i){
+  var dc=r.status==='completed'?'ld-done':r.status==='error'?'ld-err':'ld-info';
+  var ts=r.timestamp?new Date(r.timestamp).toLocaleString('en-AU'):'—';
+  var hasDetails=r.details&&r.details.length;
+  var detailsHtml='';
+  if(hasDetails){
+    var inINF=function(nm){var n=(nm.split(' \u2014 ')[0]||nm).toLowerCase();return INF.some(function(x){var xn=(x.name||'').toLowerCase();return xn===n||xn.includes(n.split(' ')[1]||'__')||n.includes(xn.split(' ')[1]||'__');});};
+    var pending=r.details.filter(function(d){var dec=getProspectDecision(d.split(' \u2014 ')[0].trim());return!dec&&!inINF(d);});
+    var addAllBtn=pending.length>0
+      ?'<button onclick="addAllProspectsFromLog('+i+')" style="background:var(--gl);color:#000;border:none;border-radius:4px;font-size:11px;font-weight:700;padding:5px 14px;cursor:pointer;white-space:nowrap;">+ Add All Pending ('+pending.length+')</button>'
+      :'<span style="font-size:11px;color:#5ACA7A;font-weight:700;">✓ All reviewed</span>';
+    detailsHtml='<div style="margin-top:12px;padding:14px;background:#0C0C0C;border:1px solid #1A1A1A;border-radius:6px;">';
+    if(r.week_type)detailsHtml+='<div style="font-size:10px;color:var(--gl);font-weight:700;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;">'+r.week_type+'</div>';
+    detailsHtml+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'+
+      '<div style="font-size:11px;color:#666;">'+r.details.length+' prospects found</div>'+addAllBtn+'</div>';
+    detailsHtml+=r.details.map(function(d){
+      var name=d.split(' \u2014 ')[0].trim();
+      var dec=getProspectDecision(name);
+      var added=inINF(d);
+      var safe=d.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      var actions;
+      if(added||dec&&dec.decision==='confirm'){
+        actions='<span style="font-size:10px;color:#3A6A3A;white-space:nowrap;">✓ Added</span>';
+      } else if(dec&&dec.decision==='skip'){
+        actions='<span style="font-size:10px;color:#5A2A2A;white-space:nowrap;margin-right:6px;">✗ Skipped</span>'+
+          '<button onclick="undoFeedback(\''+name.replace(/'/g,"\\'")+'\')" style="background:none;border:1px solid #2A2A2A;border-radius:3px;color:#555;font-size:9px;padding:1px 6px;cursor:pointer;">undo</button>';
+      } else {
+        actions='<div style="display:flex;gap:5px;align-items:center;">'
+          +'<button onclick="confirmProspect(\''+safe+'\','+i+')" style="background:#0D1A0D;border:1px solid #2A5A2A;border-radius:3px;color:#6AC47A;font-size:11px;font-weight:700;padding:3px 12px;cursor:pointer;white-space:nowrap;">✓ Add</button>'
+          +'<button onclick="skipProspect(\''+safe+'\','+i+')" style="background:#1A0A0A;border:1px solid #4A1A1A;border-radius:3px;color:#A05050;font-size:11px;padding:3px 10px;cursor:pointer;white-space:nowrap;">✗ Skip</button>'
+          +'</div>';
+      }
+      var dim=dec&&dec.decision==='skip';
+      return'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #141414;opacity:'+(dim?'0.35':'1')+';transition:.2s;">'
+        +'<div style="font-size:12px;color:'+(added||dec&&dec.decision==='confirm'?'#3A6A3A':dim?'#555':'#CCC')+';flex:1;line-height:1.5;'+(dim?'text-decoration:line-through;':'')+'">'+d+'</div>'
+        +'<div style="flex-shrink:0;">'+actions+'</div>'
+        +'</div>';
+    }).join('');
+    if(r.top_recommendations&&r.top_recommendations.length){
+      detailsHtml+='<div style="margin-top:12px;padding:10px 12px;background:#0A150A;border:1px solid #1A3A1A;border-radius:4px;">';
+      detailsHtml+='<div style="font-size:10px;color:#6AC47A;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;">⭐ Top Picks</div>';
+      r.top_recommendations.forEach(function(t){detailsHtml+='<div style="font-size:11px;color:#AAA;padding:3px 0;line-height:1.4;">'+t+'</div>';});
+      detailsHtml+='</div>';
+    }
+    if(r.next_week)detailsHtml+='<div style="margin-top:10px;font-size:10px;color:#444;font-style:italic;">Next run focus: '+r.next_week+'</div>';
+    // Feedback summary for this run
+    var fb=getFeedback().filter(function(f){return f.runIdx===i;});
+    if(fb.length){
+      var confirmed=fb.filter(function(f){return f.decision==='confirm';}).length;
+      var skipped=fb.filter(function(f){return f.decision==='skip';}).length;
+      detailsHtml+='<div style="margin-top:10px;padding:8px 10px;background:#111;border:1px solid #1E1E1E;border-radius:4px;font-size:10px;color:#666;">'
+        +'Your feedback: <span style="color:#5ACA7A;">'+confirmed+' added</span>'+(skipped?' · <span style="color:#A05050;">'+skipped+' skipped</span>':'')+' — agent learns from this next Friday'
+        +'</div>';
+    }
+    detailsHtml+='</div>';
+  }
+  return'<div class="logentry" style="flex-direction:column;cursor:default;">'
+    +'<div style="display:flex;gap:12px;align-items:flex-start;">'
+      +'<div class="ldot '+dc+'" style="margin-top:3px;flex-shrink:0;"></div>'
+      +'<div style="flex:1;">'
+        +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">'
+          +'<span class="lagent">'+r.agent+'</span>'
+          +(hasDetails?'<span style="font-size:10px;background:#0D2A10;color:#5ACA7A;padding:1px 6px;border-radius:10px;">'+r.details.length+' prospects</span>':'')
+        +'</div>'
+        +'<div class="lmsg" style="margin-top:4px;">'+r.summary+'</div>'
+        +'<div class="lts">'+ts+'</div>'
+      +'</div>'
+    +'</div>'
+    +detailsHtml
+    +'</div>';
+}
+
 function renderLogEntries(){
   var html=AGENT_RUNS.length===0
     ?'<div class="logempty">No agent runs recorded yet. Activity appears here automatically after each run.</div>'
-    :AGENT_RUNS.slice(0,20).map(function(r,i){
-      var dc=r.status==='completed'?'ld-done':r.status==='error'?'ld-err':'ld-info';
-      var ts=r.timestamp?new Date(r.timestamp).toLocaleString('en-AU'):'—';
-      var hasDetails=r.details&&r.details.length;
-      var detailsHtml='';
-      if(hasDetails){
-        var inINF=function(nm){return INF.some(function(x){var n=(nm.split(' — ')[0]||nm).toLowerCase();return(x.name||'').toLowerCase().includes(n.split(' ')[1]||n)||n.includes((x.name||'').toLowerCase().split(' ')[1]||'');});};
-        detailsHtml='<div id="run-details-'+i+'" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid #1A1A1A;" onclick="event.stopPropagation()">';
-        if(r.week_type)detailsHtml+='<div style="font-size:10px;color:var(--gl);font-weight:700;margin-bottom:10px;">'+r.week_type+'</div>';
-        detailsHtml+=r.details.map(function(d){
-          var already=inINF(d);
-          var addBtn=already
-            ?'<span style="font-size:10px;color:#555;white-space:nowrap;">✓ Added</span>'
-            :'<button onclick="addProspectFromLog(\''+d.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\','+i+')" style="background:#0D1A0D;border:1px solid #2A5A2A;border-radius:3px;color:#6AC47A;font-size:10px;padding:2px 10px;cursor:pointer;white-space:nowrap;">+ Add</button>';
-          return'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #0F0F0F;">'
-            +'<div style="font-size:12px;color:#CCC;flex:1;line-height:1.4;">'+d+'</div>'
-            +'<div style="flex-shrink:0;">'+addBtn+'</div>'
-            +'</div>';
-        }).join('');
-        if(r.top_recommendations&&r.top_recommendations.length){
-          detailsHtml+='<div style="margin-top:12px;padding:10px 12px;background:#0A150A;border:1px solid #1A3A1A;border-radius:4px;">';
-          detailsHtml+='<div style="font-size:10px;color:#6AC47A;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;">⭐ Top Recommendations</div>';
-          r.top_recommendations.forEach(function(t){detailsHtml+='<div style="font-size:11px;color:#AAA;padding:3px 0;line-height:1.4;">'+t+'</div>';});
-          detailsHtml+='</div>';
-        }
-        if(r.next_week)detailsHtml+='<div style="margin-top:8px;font-size:10px;color:#444;font-style:italic;">Next focus: '+r.next_week+'</div>';
-        detailsHtml+='</div>';
-      }
-      var viewBtn=hasDetails?'<button id="run-btn-'+i+'" onclick="event.stopPropagation();toggleRunDetails('+i+')" style="background:none;border:1px solid #2A2A2A;border-radius:3px;color:#888;font-size:10px;padding:2px 9px;cursor:pointer;margin-left:8px;">▼ '+r.details.length+' added</button>':'';
-      return'<div class="logentry" style="flex-direction:column;" onclick="toggleRunDetails('+i+')">'
-        +'<div style="display:flex;gap:12px;align-items:flex-start;">'
-          +'<div class="ldot '+dc+'" style="margin-top:3px;flex-shrink:0;"></div>'
-          +'<div style="flex:1;">'
-            +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">'
-              +'<span class="lagent">'+r.agent+'</span>'+viewBtn
-            +'</div>'
-            +'<div class="lmsg">'+r.summary+'</div>'
-            +'<div class="lts">'+ts+'</div>'
-          +'</div>'
-        +'</div>'
-        +detailsHtml
-        +'</div>';
-    }).join('');
+    :AGENT_RUNS.slice(0,20).map(function(r,i){return buildRunHtml(r,i);}).join('');
   ['log-body','ag-log-body'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=html;});
 }
 
-function toggleRunDetails(i){
-  ['log-body','ag-log-body'].forEach(function(){
-    var el=document.getElementById('run-details-'+i);
-    var btn=document.getElementById('run-btn-'+i);
-    if(!el)return;
-    var open=el.style.display==='block';
-    el.style.display=open?'none':'block';
-    if(btn){var run=AGENT_RUNS[i];var cnt=run&&run.details?run.details.length:0;btn.textContent=open?'▼ '+cnt+' added':'▲ '+cnt+' added';}
+function addAllProspectsFromLog(runIdx){
+  var r=AGENT_RUNS[runIdx];if(!r||!r.details)return;
+  var inINF=function(nm){var n=(nm.split(' \u2014 ')[0]||nm).toLowerCase();return INF.some(function(x){var xn=(x.name||'').toLowerCase();return xn===n||xn.includes(n.split(' ')[1]||'__')||n.includes(xn.split(' ')[1]||'__');});};
+  var added=0;
+  r.details.forEach(function(d){
+    if(inINF(d))return;
+    var parts=d.split(' \u2014 ');var name=parts[0].trim();var notes=parts.slice(1).join(' \u2014 ').trim();
+    var fm=d.match(/~([\d.]+[KMkm]+)/i);
+    INF.unshift({name:name,handle:'',country:'',niche:'',followers:fm?'~'+fm[1]:'',verified:'',bloodTest:'',status:'🔍 PROSPECT',dealType:'',commission:'',rev1:'',rev2:'',igProfile:'',email:'',phone:'',website:'',notes:notes,addedSource:'agent',addedAt:r.timestamp||new Date().toISOString()});
+    added++;
   });
+  sv();renderInf();renderLogEntries();
+  toast('Added '+added+' prospects to Influencers 🆕');
 }
 
 function addProspectFromLog(detailStr,runIdx){
