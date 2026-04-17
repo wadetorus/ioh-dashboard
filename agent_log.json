@@ -49,5 +49,27 @@
       }
     }
   },
-  "runs": []
+  "runs": [
+    {
+      "agent": "ioh-prospecting-agent",
+      "timestamp": "2026-04-17T00:00:00",
+      "status": "completed",
+      "week_type": "Week E \u2014 Health entrepreneurs who certify/train other practitioners",
+      "summary": "Added 7 new prospects (practitioner-certification founders) based on similarity analysis of existing 32 influencers",
+      "details": [
+        "Dr. Gabrielle Lyon \u2014 Muscle-Centric Medicine\u00ae cert, ~1M followers",
+        "Dr. Casey Means \u2014 Levels co-founder, metabolic health, ~766K followers",
+        "Kayla Barnes-Lentz \u2014 Female longevity, biomarker optimization, ~627K followers",
+        "Chris Kresser \u2014 ADAPT certification, 1500+ clinicians trained, ~149K followers",
+        "Dr. Stephanie Estima \u2014 Estima Certification, women's hormones, ~150K followers",
+        "Ben Bikman PhD \u2014 Insulin IQ coach cert, metabolic science, ~304K followers",
+        "Shawn Wells \u2014 World's Greatest Formulator, supplement science, ~170K followers"
+      ],
+      "top_recommendations": [
+        "Dr. Gabrielle Lyon \u2014 her practitioner cert network is a direct IOH pipeline",
+        "Chris Kresser \u2014 1500+ ADAPT-trained clinicians who could add IOH blood testing"
+      ],
+      "next_week": "Week F \u2014 Asian/Pacific health influencers with English-speaking audiences"
+    }
+  ]
 }
