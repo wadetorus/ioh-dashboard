@@ -348,7 +348,7 @@ tbody td{padding:9px 12px;font-size:12px;color:var(--grl);vertical-align:middle;
   </div>
 
   <div class="footer">
-    <div><span class="brand">| MRFOXX |</span> &nbsp;·&nbsp; IOH Agent Dashboard &nbsp;·&nbsp; wade.foxx@8figureclosers.com</div>
+    <div><span class="brand">| MRFOXX |</span> &nbsp;·&nbsp; IOH Agent Dashboard</div>
     <div id="last-updated">—</div>
   </div>
 </div>
@@ -1222,9 +1222,15 @@ function buildRunHtml(r,i){
       '<div style="font-size:11px;color:#666;">'+r.details.length+' prospects found</div>'+addAllBtn+'</div>';
     detailsHtml+=r.details.map(function(d){
       var name=d.split(' \u2014 ')[0].trim();
+      var desc=d.split(' \u2014 ').slice(1).join(' \u2014 ');
       var dec=getProspectDecision(name);
       var added=inINF(d);
       var safe=d.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      // Find Instagram URL — check INF first, then POD, then fall back to IG search
+      var igMatch=INF.find(function(x){return(x.name||'').toLowerCase()===name.toLowerCase()&&x.igProfile;})||
+                  INF.find(function(x){return(x.name||'').toLowerCase().includes(name.split(' ')[1]||'__')&&x.igProfile;});
+      var igUrl=igMatch?igMatch.igProfile:'https://www.instagram.com/search/top/?q='+encodeURIComponent(name);
+      var nameLink='<a href="'+igUrl+'" target="_blank" style="color:'+(added||dec&&dec.decision==='confirm'?'#3A6A3A':dec&&dec.decision==='skip'?'#555':'var(--gl)')+';text-decoration:none;font-weight:700;" title="View on Instagram">'+name+' ↗</a>';
       var actions;
       if(added||dec&&dec.decision==='confirm'){
         actions='<span style="font-size:10px;color:#3A6A3A;white-space:nowrap;">✓ Added</span>';
@@ -1239,7 +1245,10 @@ function buildRunHtml(r,i){
       }
       var dim=dec&&dec.decision==='skip';
       return'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #141414;opacity:'+(dim?'0.35':'1')+';transition:.2s;">'
-        +'<div style="font-size:12px;color:'+(added||dec&&dec.decision==='confirm'?'#3A6A3A':dim?'#555':'#CCC')+';flex:1;line-height:1.5;'+(dim?'text-decoration:line-through;':'')+'">'+d+'</div>'
+        +'<div style="flex:1;line-height:1.5;">'
+          +nameLink
+          +(desc?'<span style="font-size:11px;color:'+(dim?'#444':'#777');"> — '+desc+'</span>':'')
+        +'</div>'
         +'<div style="flex-shrink:0;">'+actions+'</div>'
         +'</div>';
     }).join('');
